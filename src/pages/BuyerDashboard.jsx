@@ -204,13 +204,13 @@ export default function BuyerDashboard() {
               <Activity size={20} /> Fila de Reposição
             </h3>
 
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', flex: '1' }}>
               <input 
                 type="text" 
                 placeholder="Buscar produto ou vendedor..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{ background: 'var(--bg-secondary)', color: 'white', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', width: '250px' }}
+                style={{ background: 'var(--bg-secondary)', color: 'white', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', flex: '1 1 200px', maxWidth: '100%' }}
               />
 
               <select 
@@ -332,7 +332,7 @@ export default function BuyerDashboard() {
             <Users size={20} /> Equipe de Vendedores (Acesso ao Sistema)
           </h3>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '2rem' }}>
             {/* Form Cadastrar */}
             <div style={{ background: 'rgba(0,0,0,0.15)', padding: '1.5rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontWeight: 'bold' }}>
@@ -368,8 +368,8 @@ export default function BuyerDashboard() {
             <div>
               <div style={{ display: 'grid', gap: '1rem' }}>
                 {usersList?.filter(u => u.role === 'vendedor').map(u => (
-                  <div key={u.uid} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
+                  <div key={u.uid} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ flex: '1 1 150px' }}>
                       <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{u.nome}</div>
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Setor: {u.setor}</div>
                     </div>
