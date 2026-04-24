@@ -72,9 +72,6 @@ export default function Login() {
           </button>
         </form>
 
-        <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-          Acesso inicial: <strong style={{ color: 'white'}}>admin</strong> / <strong style={{ color: 'white'}}>123</strong>
-        </div>
       </div>
     </div>
   );

@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     let storedUsers = localStorage.getItem('@MercadoriaAuth:users');
     if (!storedUsers) {
       storedUsers = [
-        { uid: 'u_admin', username: 'admin', password: '123', role: 'comprador', nome: 'Administrador', setor: 'Diretoria' }
+        { uid: 'u_admin', username: 'juliano', password: '123', role: 'comprador', nome: 'Juliano', setor: 'Diretoria' }
       ];
       localStorage.setItem('@MercadoriaAuth:users', JSON.stringify(storedUsers));
     } else {
