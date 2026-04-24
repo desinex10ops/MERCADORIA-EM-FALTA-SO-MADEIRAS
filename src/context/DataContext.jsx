@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import { supabase } from '../lib/supabase';
 
 const DataContext = createContext();
 
@@ -12,83 +12,64 @@ export const DataProvider = ({ children }) => {
 
   // Load records from local storage
   useEffect(() => {
-    const stored = localStorage.getItem('@MercadoriaData:records');
     const storedPurchases = localStorage.getItem('@MercadoriaData:purchases');
-    const storedProducts = localStorage.getItem('@MercadoriaData:products');
-    
-    if (storedPurchases) {
-      setPurchases(JSON.parse(storedPurchases));
-    }
+    if (storedPurchases) setPurchases(JSON.parse(storedPurchases));
 
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
-    } else {
-      const initialProducts = [
-        { id: 'p1', nome: 'Cimento Votorantim 50kg', setor: 'Básico' },
-        { id: 'p2', nome: 'Tubo PVC 100mm Tigre', setor: 'Hidráulica' },
-        { id: 'p3', nome: 'Fio Flexível 2.5mm Sil', setor: 'Elétrica' },
-        { id: 'p4', nome: 'Tinta Acrílica Coral 18L', setor: 'Pintura' },
-        { id: 'p5', nome: 'Argamassa ACIII Quartzolit', setor: 'Básico' },
-      ];
-      setProducts(initialProducts);
-      localStorage.setItem('@MercadoriaData:products', JSON.stringify(initialProducts));
-    }
+    const fetchData = async () => {
+      const [{ data: localRecords }, { data: localProducts }] = await Promise.all([
+        supabase.from('records').select('*').order('data_criacao', { ascending: false }),
+        supabase.from('products').select('*').order('created_at', { ascending: false })
+      ]);
+      if (localRecords) setRecords(localRecords);
+      if (localProducts) setProducts(localProducts);
+    };
 
-    if (stored) {
-      setRecords(JSON.parse(stored));
-    } else {
-      // Mock initial data
-      const initial = [
-        {
-          id: uuidv4(),
-          produto_nome: 'Cimento Votorantim 50kg',
-          vendedor_nome: 'João Vendedor',
-          setor: 'Básico',
-          quantidade_atual: 10,
-          quantidade_ideal: 100,
-          urgencia: 'Alta',
-          status_compra: 'Pendente',
-          chegou: false,
-          data_criacao: new Date().toISOString(),
-          data_atualizacao: new Date().toISOString(),
+    fetchData();
+
+    // Supabase Real-time Subscriptions!
+    const channel = supabase.channel('schema-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'records' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setRecords(prev => [payload.new, ...prev]);
+        } else if (payload.eventType === 'UPDATE') {
+          setRecords(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
+        } else if (payload.eventType === 'DELETE') {
+          setRecords(prev => prev.filter(r => r.id !== payload.old.id));
         }
-      ];
-      setRecords(initial);
-      localStorage.setItem('@MercadoriaData:records', JSON.stringify(initial));
-    }
-  }, []);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setProducts(prev => [payload.new, ...prev]);
+        } else if (payload.eventType === 'UPDATE') {
+          setProducts(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
+        }
+      })
+      .subscribe();
 
-  const saveRecords = (newRecords) => {
-    setRecords(newRecords);
-    localStorage.setItem('@MercadoriaData:records', JSON.stringify(newRecords));
-  };
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const savePurchases = (newPurchases) => {
     setPurchases(newPurchases);
     localStorage.setItem('@MercadoriaData:purchases', JSON.stringify(newPurchases));
   };
 
-  const saveProducts = (newProducts) => {
-    setProducts(newProducts);
-    localStorage.setItem('@MercadoriaData:products', JSON.stringify(newProducts));
+  const updateProduct = async (id, nome, setor) => {
+    await supabase.from('products').update({ nome: nome.trim(), setor: setor.trim() }).eq('id', id);
   };
 
-  const updateProduct = (id, nome, setor) => {
-    const updated = products.map(p => p.id === id ? { ...p, nome: nome.trim(), setor: setor.trim() } : p);
-    saveProducts(updated);
-  };
-
-  const addProduct = (nome, setor) => {
+  const addProduct = async (nome, setor) => {
     const nameStd = nome.trim().toLowerCase();
     if (products.find(p => p.nome.toLowerCase() === nameStd)) {
       throw new Error('Produto já existente no catálogo!');
     }
     const newProduct = {
-      id: uuidv4(),
       nome: nome.trim(),
       setor: setor.trim() || 'Geral'
     };
-    saveProducts([newProduct, ...products]);
+    await supabase.from('products').insert([newProduct]);
     return newProduct;
   };
 
@@ -102,48 +83,37 @@ export const DataProvider = ({ children }) => {
     return 'Baixa';
   };
 
-  const addRecord = (record) => {
-    // Check and save new product dynamically to memory (Auto-learn feature)
+  const addRecord = async (record) => {
     const prodExists = products.find(p => p.nome.toLowerCase() === record.produto_nome.toLowerCase());
     if (!prodExists) {
-      const newProduct = {
-        id: uuidv4(),
-        nome: record.produto_nome,
-        setor: record.setor || 'Geral'
-      };
-      saveProducts([...products, newProduct]);
+      await supabase.from('products').insert([{ nome: record.produto_nome, setor: record.setor || 'Geral' }]);
     }
 
     const urgency = calculateUrgency(record.quantidade_atual, record.quantidade_ideal);
     const newRecord = {
       ...record,
-      id: uuidv4(),
       urgencia: urgency,
       status_compra: 'Pendente',
-      chegou: false,
+      chegou: record.chegou || false,
       data_criacao: new Date().toISOString(),
       data_atualizacao: new Date().toISOString(),
     };
-    saveRecords([newRecord, ...records]);
+    // remove id if generated locally so supabase inserts valid UUID
+    delete newRecord.id; 
+    
+    await supabase.from('records').insert([newRecord]);
   };
 
-  const updateRecordStatus = (id, newStatus) => {
-    const updated = records.map(r => 
-      r.id === id ? { ...r, status_compra: newStatus, data_atualizacao: new Date().toISOString() } : r
-    );
-    saveRecords(updated);
+  const updateRecordStatus = async (id, newStatus) => {
+    await supabase.from('records').update({ status_compra: newStatus, data_atualizacao: new Date().toISOString() }).eq('id', id);
   };
 
-  const markAsArrived = (id) => {
-    const updated = records.map(r => 
-      r.id === id ? { ...r, chegou: true, data_atualizacao: new Date().toISOString() } : r
-    );
-    saveRecords(updated);
+  const markAsArrived = async (id) => {
+    await supabase.from('records').update({ chegou: true, data_atualizacao: new Date().toISOString() }).eq('id', id);
   };
 
-  const deleteRecord = (id) => {
-    const updated = records.filter(r => r.id !== id);
-    saveRecords(updated);
+  const deleteRecord = async (id) => {
+    await supabase.from('records').delete().eq('id', id);
   };
 
   const addPurchase = (recordId, fornecedor, valorUnitario, quantidade) => {
@@ -183,28 +153,25 @@ export const DataProvider = ({ children }) => {
     };
   };
 
-  const addProductsBulk = (lines, defaultSetor) => {
-    let currentProducts = [...products];
-    let count = 0;
+  const addProductsBulk = async (lines, defaultSetor) => {
+    let toInsert = [];
     
     for (let line of lines) {
       const nameStd = line.trim().toLowerCase();
       if (!nameStd) continue;
       
-      if (!currentProducts.find(p => p.nome.toLowerCase() === nameStd)) {
-        currentProducts.unshift({
-          id: uuidv4(),
+      if (!products.find(p => p.nome.toLowerCase() === nameStd) && !toInsert.find(p => p.nome.toLowerCase() === nameStd)) {
+        toInsert.push({
           nome: line.trim(),
           setor: defaultSetor || 'Geral'
         });
-        count++;
       }
     }
     
-    if (count > 0) {
-      saveProducts(currentProducts);
+    if (toInsert.length > 0) {
+      await supabase.from('products').insert(toInsert);
     }
-    return count;
+    return toInsert.length;
   };
 
   return (
