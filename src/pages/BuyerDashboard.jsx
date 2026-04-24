@@ -237,8 +237,8 @@ export default function BuyerDashboard() {
           </div>
 
           {/* Table/List View */}
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
+          <div style={{ overflowX: 'hidden' }}>
+            <table className="responsive-table" style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', textAlign: 'left' }}>
                   <th style={{ padding: '1rem 0.5rem' }}>Produto</th>
@@ -261,7 +261,7 @@ export default function BuyerDashboard() {
                     
                     return (
                       <tr key={record.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '1rem 0.5rem' }}>
+                        <td data-label="Produto" style={{ padding: '1rem 0.5rem' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             {record.foto && (
                               <img 
@@ -284,7 +284,7 @@ export default function BuyerDashboard() {
                             </div>
                           </div>
                         </td>
-                        <td style={{ padding: '1rem 0.5rem' }}>
+                        <td data-label="Referência de Preço" style={{ padding: '1rem 0.5rem' }}>
                           {stats ? (
                             <div style={{ fontSize: '0.8rem' }}>
                               <div style={{ color: 'var(--status-green)', fontWeight: '600' }}>
@@ -298,19 +298,19 @@ export default function BuyerDashboard() {
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Sem histórico.</div>
                           )}
                         </td>
-                        <td style={{ padding: '1rem 0.5rem' }}>
+                        <td data-label="Solicitante" style={{ padding: '1rem 0.5rem' }}>
                           <div>{record.vendedor_nome}</div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{record.setor}</div>
                         </td>
-                        <td style={{ padding: '1rem 0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
+                        <td data-label="Estoque / Ideal" style={{ padding: '1rem 0.5rem', textAlign: 'center', fontWeight: 'bold' }}>
                           {record.quantidade_atual} / {record.quantidade_ideal}
                         </td>
-                        <td style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>
+                        <td data-label="Urgência" style={{ padding: '1rem 0.5rem', textAlign: 'center' }}>
                           {record.urgencia === 'Alta' && <span style={{ color: 'var(--status-red)', fontWeight: 'bold' }}>Alta</span>}
                           {record.urgencia === 'Média' && <span style={{ color: 'var(--status-yellow)' }}>Média</span>}
                           {record.urgencia === 'Baixa' && <span style={{ color: 'var(--status-green)' }}>Baixa</span>}
                         </td>
-                        <td style={{ padding: '1rem 0.5rem' }}>
+                        <td data-label="Gestão de Status" style={{ padding: '1rem 0.5rem' }}>
                           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                             <StatusButton record={record} status="Pendente" currentStatus={record.status_compra} color="var(--text-secondary)" />
                             <StatusButton record={record} status="Comprou" currentStatus={record.status_compra} color="var(--status-green)" />

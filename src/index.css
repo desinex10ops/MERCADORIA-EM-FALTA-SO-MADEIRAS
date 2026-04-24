@@ -110,4 +110,38 @@ input, button, select, textarea {
   .mobile-nav { padding: 1rem 0.5rem !important; }
   .mobile-gap { gap: 0.5rem !important; }
   .mobile-h2 { font-size: 1.1rem !important; }
+
+  /* Responsive Tables */
+  .responsive-table {
+    min-width: 100% !important;
+  }
+  .responsive-table thead {
+    display: none;
+  }
+  .responsive-table tbody tr {
+    display: block;
+    margin-bottom: 1.5rem;
+    background: rgba(0,0,0,0.2) !important;
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: var(--radius-md);
+    padding: 0.5rem;
+  }
+  .responsive-table tbody td {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem 0.5rem !important;
+    text-align: left !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+  }
+  .responsive-table tbody td:last-child {
+    border-bottom: none !important;
+  }
+  .responsive-table tbody td::before {
+    content: attr(data-label);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
 }
