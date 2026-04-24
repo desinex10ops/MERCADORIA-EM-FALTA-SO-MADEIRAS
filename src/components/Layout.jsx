@@ -39,21 +39,21 @@ export default function Layout({ children }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
       {/* Top Navbar */}
-      <nav className="glass-panel" style={{ 
+      <nav className="glass-panel mobile-nav" style={{ 
         position: 'sticky', top: 0, zIndex: 10, display: 'flex', justifyContent: 'space-between', 
         alignItems: 'center', padding: '1rem 2rem', borderRadius: 0, borderTop: 0, borderLeft: 0, borderRight: 0 
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div className="mobile-gap" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <div style={{ background: 'var(--accent-blue)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
             {isVendedor ? <PackagePlus size={20} color="white" /> : <LayoutDashboard size={20} color="white" />}
           </div>
-          <h2 style={{ fontSize: '1.25rem' }}>Controle de Faltas</h2>
+          <h2 className="mobile-h2 hide-on-mobile" style={{ fontSize: '1.25rem' }}>Controle de Faltas</h2>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <div className="mobile-gap" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <div style={{ textAlign: 'right', display: 'block' }}>
             <div style={{ fontWeight: '600', color: 'var(--accent-blue)' }}>{user?.nome}</div>
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{user?.role === 'vendedor' ? user?.setor : 'Administração'}</div>
+            <div className="hide-on-mobile" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{user?.role === 'vendedor' ? user?.setor : 'Administração'}</div>
           </div>
           <button onClick={() => setShowPasswordModal(true)} style={{ 
             background: 'transparent', border: 'none', color: 'var(--text-secondary)',
