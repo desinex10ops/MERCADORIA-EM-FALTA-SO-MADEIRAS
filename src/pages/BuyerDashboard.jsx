@@ -140,34 +140,34 @@ export default function BuyerDashboard() {
       <div style={{ display: 'grid', gap: '2rem' }}>
         
         {/* KPI Dashboard */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
           
-          <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="glass-panel kpi-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ background: 'rgba(255,255,255,0.1)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
               <PackageSearch size={24} color="white" />
             </div>
             <div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{totalFaltas}</div>
+              <div className="kpi-number" style={{ fontSize: '2rem', fontWeight: 'bold' }}>{totalFaltas}</div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Total em Falta</div>
             </div>
           </div>
 
-          <div className="glass-panel bg-red-soft" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="glass-panel bg-red-soft kpi-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ background: 'var(--status-red)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
               <AlertTriangle size={24} color="white" />
             </div>
             <div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{totalUrgentes}</div>
+              <div className="kpi-number" style={{ fontSize: '2rem', fontWeight: 'bold' }}>{totalUrgentes}</div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Alta Urgência</div>
             </div>
           </div>
 
-          <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="glass-panel kpi-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ background: 'var(--accent-blue)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
               <Truck size={24} color="white" />
             </div>
             <div>
-              <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>{aCaminho}</div>
+              <div className="kpi-number" style={{ fontSize: '2rem', fontWeight: 'bold' }}>{aCaminho}</div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>A Caminho</div>
             </div>
           </div>
