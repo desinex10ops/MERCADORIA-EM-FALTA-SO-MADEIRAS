@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, LayoutDashboard, Fullscreen, History, PackagePlus, Lock, X, List, ArrowUp } from 'lucide-react';
+import { LogOut, LayoutDashboard, Fullscreen, History, PackagePlus, Lock, X, List, ArrowUp, Sun, Moon } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 export default function Layout({ children }) {
@@ -36,6 +36,21 @@ export default function Layout({ children }) {
   
   const isVendedor = user?.role === 'vendedor';
 
+  const [theme, setTheme] = useState(localStorage.getItem('@MercadoriaData:theme') || 'dark');
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.body.classList.add('light-mode');
+    } else {
+      document.body.classList.remove('light-mode');
+    }
+    localStorage.setItem('@MercadoriaData:theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
@@ -69,6 +84,7 @@ export default function Layout({ children }) {
             <div style={{ fontWeight: '600', color: 'var(--accent-blue)' }}>{user?.nome}</div>
             <div className="hide-on-mobile" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{user?.role === 'vendedor' ? user?.setor : 'Administração'}</div>
           </div>
+          <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }} title="Alternar Tema">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
           <button onClick={() => setShowPasswordModal(true)} style={{ 
             background: 'transparent', border: 'none', color: 'var(--text-secondary)',
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
@@ -148,7 +164,7 @@ export default function Layout({ children }) {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Nova Senha</label>
                 <input 
                   type="password" required value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                 />
               </div>
               
@@ -156,11 +172,11 @@ export default function Layout({ children }) {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Confirmar Nova Senha</label>
                 <input 
                   type="password" required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                 />
               </div>
 
-              <button type="submit" style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent-blue)', color: 'white', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}>
+              <button type="submit" style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent-blue)', color: 'var(--text-primary)', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}>
                 Salvar Senha
               </button>
             </form>

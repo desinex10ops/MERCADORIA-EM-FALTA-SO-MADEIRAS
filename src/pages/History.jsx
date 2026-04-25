@@ -52,7 +52,7 @@ export default function History() {
             placeholder="Buscar itens no histórico..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            style={{ background: 'rgba(0,0,0,0.2)', color: 'white', border: '1px solid var(--border-color)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', width: '300px', maxWidth: '100%' }}
+            style={{ background: 'rgba(0,0,0,0.2)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', width: '300px', maxWidth: '100%' }}
           />
         </div>
 
@@ -89,7 +89,7 @@ export default function History() {
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
                           <span>Qtd x Valor:</span> <span>{purchase.quantidade} un x R$ {purchase.valor_unitario.toFixed(2)}</span>
                         </div>
-                        <div style={{ fontSize: '0.85rem', color: 'white', display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', fontWeight: 'bold' }}>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', fontWeight: 'bold' }}>
                           <span>Total Pago:</span> <span>R$ {purchase.valor_total.toFixed(2)}</span>
                         </div>
                       </div>

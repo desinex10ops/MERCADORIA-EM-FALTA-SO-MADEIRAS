@@ -7,6 +7,11 @@
   --border-color: rgba(255, 255, 255, 0.1);
   --glass-bg: rgba(30, 41, 59, 0.7);
   
+  /* Form Elements */
+  --input-bg: rgba(0, 0, 0, 0.2);
+  --btn-glass-bg: rgba(255, 255, 255, 0.1);
+  --btn-glass-hover: rgba(255, 255, 255, 0.2);
+  
   /* Status Colors */
   --status-green: #10b981;
   --status-green-transparent: rgba(16, 185, 129, 0.15);
@@ -93,6 +98,22 @@ p { color: var(--text-secondary); line-height: 1.5; }
 /* Status colors map */
 .text-green { color: var(--status-green) !important; }
 .text-yellow { color: var(--status-yellow) !important; }
+
+/* Light Mode Variables */
+body.light-mode {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --border-color: rgba(0, 0, 0, 0.15);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  
+  --input-bg: #f1f5f9;
+  --btn-glass-bg: rgba(0, 0, 0, 0.05);
+  --btn-glass-hover: rgba(0, 0, 0, 0.1);
+  
+  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+}
 .text-red { color: var(--status-red) !important; }
 .bg-green-soft { background: var(--status-green-transparent) !important; color: var(--status-green) !important;}
 .bg-yellow-soft { background: var(--status-yellow-transparent) !important; color: var(--status-yellow) !important;}

@@ -132,7 +132,7 @@ export default function ProductsCatalog() {
         <h2>Catálogo de Produtos</h2>
         <button 
           onClick={() => { setProdNome(''); setProdSetor(''); setIsAddingProduct(true); }}
-          style={{ background: 'var(--accent-blue)', color: 'white', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          style={{ background: 'var(--accent-blue)', color: 'var(--text-primary)', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
           <PlusCircle size={20} /> Novo Produto
         </button>
@@ -147,14 +147,14 @@ export default function ProductsCatalog() {
               placeholder="Buscar por nome..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              style={{ background: 'transparent', border: 'none', color: 'white', width: '100%', outline: 'none' }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', width: '100%', outline: 'none' }}
             />
           </div>
           
           <select 
             value={selectedSetor} 
             onChange={e => setSelectedSetor(e.target.value)}
-            style={{ flex: '0 1 250px', background: 'var(--bg-secondary)', color: 'white', border: '1px solid var(--border-color)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}
+            style={{ flex: '0 1 250px', background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}
           >
             {setores.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
@@ -184,7 +184,7 @@ export default function ProductsCatalog() {
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                       <button 
                          onClick={() => handleEditClick(prod)}
-                         style={{ background: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid transparent', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                         style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', border: '1px solid transparent', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                       >
                          <Edit size={16} /> Editar
                       </button>
@@ -219,8 +219,8 @@ export default function ProductsCatalog() {
 
             {isAddingProduct && (
               <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', padding: '0.25rem', background: 'rgba(0,0,0,0.2)', borderRadius: 'var(--radius-sm)' }}>
-                <button type="button" onClick={() => setIsBulkMode(false)} style={{ flex: 1, padding: '0.5rem', background: !isBulkMode ? 'var(--accent-blue)' : 'transparent', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: !isBulkMode ? 'bold' : 'normal' }}>Item Único</button>
-                <button type="button" onClick={() => setIsBulkMode(true)} style={{ flex: 1, padding: '0.5rem', background: isBulkMode ? 'var(--accent-blue)' : 'transparent', color: 'white', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: isBulkMode ? 'bold' : 'normal' }}>Em Lote (Texto)</button>
+                <button type="button" onClick={() => setIsBulkMode(false)} style={{ flex: 1, padding: '0.5rem', background: !isBulkMode ? 'var(--accent-blue)' : 'transparent', color: 'var(--text-primary)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: !isBulkMode ? 'bold' : 'normal' }}>Item Único</button>
+                <button type="button" onClick={() => setIsBulkMode(true)} style={{ flex: 1, padding: '0.5rem', background: isBulkMode ? 'var(--accent-blue)' : 'transparent', color: 'var(--text-primary)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontWeight: isBulkMode ? 'bold' : 'normal' }}>Em Lote (Texto)</button>
               </div>
             )}
 
@@ -234,20 +234,20 @@ export default function ProductsCatalog() {
                     onChange={e => setBulkText(e.target.value)} 
                     placeholder="Exatamente como no bloco de notas:&#10;CIMENTO POTY 50KG&#10;PARAFUSO EXEMPLO 1" 
                     rows="6" 
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white', resize: 'vertical', fontFamily: 'monospace' }} 
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', resize: 'vertical', fontFamily: 'monospace' }} 
                   />
                 </div>
               ) : (
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Nome da Peça/Produto</label>
-                  <input type="text" required value={prodNome} onChange={e => setProdNome(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }} />
+                  <input type="text" required value={prodNome} onChange={e => setProdNome(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
                 </div>
               )}
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Setor Base {isBulkMode && '(Aplicado a todos)'}</label>
-                <input type="text" required={!isBulkMode} value={prodSetor} onChange={e => setProdSetor(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }} />
+                <input type="text" required={!isBulkMode} value={prodSetor} onChange={e => setProdSetor(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
               </div>
-              <button type="submit" style={{ padding: '0.75rem', fontWeight: 'bold', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--accent-blue)', color: 'white', cursor: 'pointer', marginTop: '0.5rem' }}>
+              <button type="submit" style={{ padding: '0.75rem', fontWeight: 'bold', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--accent-blue)', color: 'var(--text-primary)', cursor: 'pointer', marginTop: '0.5rem' }}>
                 Salvar Catálogo
               </button>
             </form>
@@ -272,26 +272,26 @@ export default function ProductsCatalog() {
             <form onSubmit={handleSubmitShortage} style={{ display: 'grid', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Quantidade Atual (Estoque real agora)</label>
-                <input type="number" min="0" value={qtdAtual} onChange={e => setQtdAtual(e.target.value)} placeholder="Opcional. Padrão: 0" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white', fontSize: '1.2rem' }} />
+                <input type="number" min="0" value={qtdAtual} onChange={e => setQtdAtual(e.target.value)} placeholder="Opcional. Padrão: 0" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)', fontSize: '1.2rem' }} />
               </div>
 
               <div>
                 <input type="file" accept="image/*" capture="environment" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
                 {!fotoPreview ? (
-                  <button type="button" onClick={() => fileInputRef.current.click()} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '0.75rem', width: '100%', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  <button type="button" onClick={() => fileInputRef.current.click()} style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', padding: '0.75rem', width: '100%', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                     <Camera size={20} /> Anexar Foto Opcional
                   </button>
                 ) : (
                   <div style={{ position: 'relative', display: 'inline-block' }}>
                     <img src={fotoPreview} alt="Preview" style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '2px solid var(--accent-blue)' }} />
-                    <button type="button" onClick={() => setFotoPreview(null)} style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--status-red)', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button type="button" onClick={() => setFotoPreview(null)} style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--status-red)', color: 'var(--text-primary)', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <X size={14} />
                     </button>
                   </div>
                 )}
               </div>
 
-              <button type="submit" style={{ padding: '1rem', fontWeight: 'bold', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--status-green)', color: 'white', cursor: 'pointer', marginTop: '1rem', fontSize: '1.1rem' }}>
+              <button type="submit" style={{ padding: '1rem', fontWeight: 'bold', border: 'none', borderRadius: 'var(--radius-sm)', background: 'var(--status-green)', color: 'var(--text-primary)', cursor: 'pointer', marginTop: '1rem', fontSize: '1.1rem' }}>
                 Enviar para o Comprador
               </button>
             </form>

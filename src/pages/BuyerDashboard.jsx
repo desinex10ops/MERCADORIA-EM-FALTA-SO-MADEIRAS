@@ -210,13 +210,13 @@ export default function BuyerDashboard() {
                 placeholder="Buscar produto ou vendedor..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{ background: 'var(--bg-secondary)', color: 'white', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', flex: '1 1 200px', maxWidth: '100%' }}
+                style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', flex: '1 1 200px', maxWidth: '100%' }}
               />
 
               <select 
                 value={filterStatus} 
                 onChange={e => setFilterStatus(e.target.value)}
-                style={{ background: 'var(--bg-secondary)', color: 'white', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}
+                style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}
               >
                 <option value="Todos">Todos Status</option>
                 <option value="Pendente">Pendente</option>
@@ -226,7 +226,7 @@ export default function BuyerDashboard() {
               <select 
                 value={filterUrgency} 
                 onChange={e => setFilterUrgency(e.target.value)}
-                style={{ background: 'var(--bg-secondary)', color: 'white', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}
+                style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}
               >
                 <option value="Todos">Todas Urgências</option>
                 <option value="Alta">Alta</option>
@@ -275,7 +275,7 @@ export default function BuyerDashboard() {
                               <div style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                                 {record.produto_nome}
                                 {record.cliente_esperando && (
-                                  <span style={{ fontSize: '0.65rem', background: 'var(--status-red)', color: 'white', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🚨 Cliente Esperando</span>
+                                  <span style={{ fontSize: '0.65rem', background: 'var(--status-red)', color: 'var(--text-primary)', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🚨 Cliente Esperando</span>
                                 )}
                               </div>
                               <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
@@ -345,20 +345,20 @@ export default function BuyerDashboard() {
               <form onSubmit={handleRegisterSeller} style={{ display: 'grid', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-secondary)' }}>Nome Completo</label>
-                  <input type="text" required value={newSellerNome} onChange={e => setNewSellerNome(e.target.value)} placeholder="Ex: Roberto Silva" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }} />
+                  <input type="text" required value={newSellerNome} onChange={e => setNewSellerNome(e.target.value)} placeholder="Ex: Roberto Silva" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-secondary)' }}>Setor / Loja</label>
-                  <input type="text" required value={newSellerSetor} onChange={e => setNewSellerSetor(e.target.value)} placeholder="Ex: Hidráulica" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }} />
+                  <input type="text" required value={newSellerSetor} onChange={e => setNewSellerSetor(e.target.value)} placeholder="Ex: Hidráulica" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.25rem', color: 'var(--text-secondary)' }}>Login (Usuário)</label>
-                  <input type="text" required value={newSellerUsername} onChange={e => setNewSellerUsername(e.target.value)} placeholder="Ex: roberto" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }} />
+                  <input type="text" required value={newSellerUsername} onChange={e => setNewSellerUsername(e.target.value)} placeholder="Ex: roberto" style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }} />
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                  A senha inicial padrão será: <strong style={{color: 'white'}}>123</strong>
+                  A senha inicial padrão será: <strong style={{color: 'var(--text-primary)'}}>123</strong>
                 </div>
-                <button type="submit" style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent-blue)', color: 'white', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}>
+                <button type="submit" style={{ padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--accent-blue)', color: 'var(--text-primary)', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}>
                   Cadastrar Acesso
                 </button>
               </form>
@@ -419,7 +419,7 @@ export default function BuyerDashboard() {
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Fornecedor</label>
                 <input 
                   type="text" required value={fornecedor} onChange={e => setFornecedor(e.target.value)}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                 />
               </div>
               
@@ -428,14 +428,14 @@ export default function BuyerDashboard() {
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Quantidade</label>
                   <input 
                     type="number" required min="1" value={quantidadeComprada} onChange={e => setQuantidadeComprada(e.target.value)}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                   />
                 </div>
                 <div>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem' }}>Valor Unitário (R$)</label>
                   <input 
                     type="number" required step="0.01" min="0" value={valorUnitario} onChange={e => setValorUnitario(e.target.value)}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white' }}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </div>
@@ -467,7 +467,7 @@ export default function BuyerDashboard() {
               )}
 
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem', flexWrap: 'wrap' }}>
-                <button type="button" onClick={() => setPurchasingRecord(null)} style={{ padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'transparent', color: 'white', cursor: 'pointer' }}>
+                <button type="button" onClick={() => setPurchasingRecord(null)} style={{ padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', background: 'transparent', color: 'var(--text-primary)', cursor: 'pointer' }}>
                   Cancelar
                 </button>
                 <button 
@@ -480,7 +480,7 @@ export default function BuyerDashboard() {
                 >
                   Pular (Só Mudar Status)
                 </button>
-                <button type="submit" style={{ padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--status-green)', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
+                <button type="submit" style={{ padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', border: 'none', background: 'var(--status-green)', color: 'var(--text-primary)', fontWeight: 'bold', cursor: 'pointer' }}>
                   Confirmar Compra
                 </button>
               </div>
@@ -495,7 +495,7 @@ export default function BuyerDashboard() {
           <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }}>
             <button 
               onClick={() => setViewingImage(null)}
-              style={{ position: 'absolute', top: '-15px', right: '-15px', background: 'var(--status-red)', color: 'white', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              style={{ position: 'absolute', top: '-15px', right: '-15px', background: 'var(--status-red)', color: 'var(--text-primary)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
             >
               <X size={20} />
             </button>

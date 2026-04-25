@@ -121,7 +121,7 @@ export default function SellerPanel() {
                 placeholder="Ex: Cimento, Prego 17x21..."
                 style={{
                   width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', 
-                  background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white'
+                  background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)'
                 }}
                 required 
               />
@@ -155,7 +155,7 @@ export default function SellerPanel() {
                 min="0"
                 style={{
                   width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', 
-                  background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white'
+                  background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)'
                 }}
               />
             </div>
@@ -170,7 +170,7 @@ export default function SellerPanel() {
                 min="1"
                 style={{
                   width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', 
-                  background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'white'
+                  background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)'
                 }}
               />
             </div>
@@ -185,7 +185,7 @@ export default function SellerPanel() {
                   onChange={(e) => setClienteEsperando(e.target.checked)}
                   style={{ width: '1.2rem', height: '1.2rem', accentColor: 'var(--status-red)' }}
                 />
-                <label htmlFor="cliente_esperando" style={{ fontSize: '0.9rem', color: 'white', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <label htmlFor="cliente_esperando" style={{ fontSize: '0.9rem', color: 'var(--text-primary)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                   🚨 Cliente Esperando na Loja
                 </label>
               </div>
@@ -221,7 +221,7 @@ export default function SellerPanel() {
                   <button 
                     type="button"
                     onClick={() => fileInputRef.current.click()}
-                    style={{ background: 'rgba(255,255,255,0.1)', color: 'white', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}
+                    style={{ background: 'rgba(255,255,255,0.1)', color: 'var(--text-primary)', padding: '0.75rem 1rem', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600' }}
                   >
                     <Camera size={20} /> Anexar Foto
                   </button>
@@ -231,7 +231,7 @@ export default function SellerPanel() {
                     <button 
                       type="button" 
                       onClick={() => setFotoPreview(null)}
-                       style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--status-red)', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                       style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--status-red)', color: 'var(--text-primary)', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       <X size={14} />
                     </button>
@@ -240,7 +240,7 @@ export default function SellerPanel() {
               </div>
 
               <button type="submit" style={{
-                background: 'var(--accent-blue)', color: 'white', padding: '0.75rem 2rem', borderRadius: 'var(--radius-md)',
+                background: 'var(--accent-blue)', color: 'var(--text-primary)', padding: '0.75rem 2rem', borderRadius: 'var(--radius-md)',
                 border: 'none', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
               }}>
                 <PlusCircle size={20} />
@@ -262,7 +262,7 @@ export default function SellerPanel() {
                 placeholder="Buscar produto..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{ background: 'var(--bg-secondary)', color: 'white', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', width: '250px' }}
+                style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', width: '250px' }}
               />
           </div>
           
@@ -279,7 +279,7 @@ export default function SellerPanel() {
                     <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
                       {record.produto_nome}
                       {record.cliente_esperando && (
-                        <span style={{ fontSize: '0.65rem', background: 'var(--status-red)', color: 'white', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🚨 Cliente Esperando</span>
+                        <span style={{ fontSize: '0.65rem', background: 'var(--status-red)', color: 'var(--text-primary)', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🚨 Cliente Esperando</span>
                       )}
                     </div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
@@ -310,7 +310,7 @@ export default function SellerPanel() {
                           )}`}
                           target="_blank" rel="noreferrer"
                           style={{
-                            background: '#25D366', color: 'white', textDecoration: 'none',
+                            background: '#25D366', color: 'var(--text-primary)', textDecoration: 'none',
                             padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)',
                             fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid #1da851'
                           }}

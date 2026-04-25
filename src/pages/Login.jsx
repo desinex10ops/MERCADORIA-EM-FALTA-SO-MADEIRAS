@@ -44,7 +44,7 @@ export default function Login() {
               style={{
                 width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', 
                 background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)',
-                color: 'white', transition: 'border-color var(--transition-fast)'
+                color: 'var(--text-primary)', transition: 'border-color var(--transition-fast)'
               }}
               required 
             />
@@ -59,13 +59,13 @@ export default function Login() {
               style={{
                 width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', 
                 background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)',
-                color: 'white'
+                color: 'var(--text-primary)'
               }}
               required 
             />
           </div>
           <button type="submit" style={{
-            background: 'var(--accent-blue)', color: 'white', padding: '0.75rem', borderRadius: 'var(--radius-sm)',
+            background: 'var(--accent-blue)', color: 'var(--text-primary)', padding: '0.75rem', borderRadius: 'var(--radius-sm)',
             border: 'none', fontWeight: '600', cursor: 'pointer', marginTop: '1rem'
           }}>
             Entrar
