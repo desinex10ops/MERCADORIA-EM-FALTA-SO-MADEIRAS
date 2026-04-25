@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, LayoutDashboard, Fullscreen, History, PackagePlus, Lock, X, List } from 'lucide-react';
+import { LogOut, LayoutDashboard, Fullscreen, History, PackagePlus, Lock, X, List, ArrowUp } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 export default function Layout({ children }) {
@@ -35,6 +35,20 @@ export default function Layout({ children }) {
   };
   
   const isVendedor = user?.role === 'vendedor';
+
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column' }}>
@@ -152,6 +166,34 @@ export default function Layout({ children }) {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Scroll to Top Button */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          style={{
+            position: 'fixed',
+            bottom: '2rem',
+            right: '2rem',
+            background: 'var(--accent-blue)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            width: '50px',
+            height: '50px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            zIndex: 90,
+            transition: 'all 0.3s ease',
+          }}
+          title="Voltar ao topo"
+        >
+          <ArrowUp size={24} />
+        </button>
       )}
     </div>
   );
