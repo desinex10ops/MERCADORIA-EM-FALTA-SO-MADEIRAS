@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 const DataContext = createContext();
 
@@ -27,10 +28,14 @@ export const DataProvider = ({ children }) => {
     fetchData();
 
     // Supabase Real-time Subscriptions!
+    // Supabase Real-time Subscriptions!
     const channel = supabase.channel('schema-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'records' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setRecords(prev => [payload.new, ...prev]);
+          setRecords(prev => {
+            if (prev.find(r => r.id === payload.new.id)) return prev;
+            return [payload.new, ...prev];
+          });
         } else if (payload.eventType === 'UPDATE') {
           setRecords(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
         } else if (payload.eventType === 'DELETE') {
@@ -39,7 +44,10 @@ export const DataProvider = ({ children }) => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setProducts(prev => [payload.new, ...prev]);
+          setProducts(prev => {
+            if (prev.find(p => p.id === payload.new.id)) return prev;
+            return [payload.new, ...prev];
+          });
         } else if (payload.eventType === 'UPDATE') {
           setProducts(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
         }
@@ -57,6 +65,7 @@ export const DataProvider = ({ children }) => {
   };
 
   const updateProduct = async (id, nome, setor) => {
+    setProducts(prev => prev.map(p => p.id === id ? { ...p, nome: nome.trim(), setor: setor.trim() } : p));
     await supabase.from('products').update({ nome: nome.trim(), setor: setor.trim() }).eq('id', id);
   };
 
@@ -69,7 +78,14 @@ export const DataProvider = ({ children }) => {
       nome: nome.trim(),
       setor: setor.trim() || 'Geral'
     };
-    await supabase.from('products').insert([newProduct]);
+    const { data } = await supabase.from('products').insert([newProduct]).select();
+    if (data && data.length > 0) {
+      setProducts(prev => {
+        if (prev.find(p => p.id === data[0].id)) return prev;
+        return [data[0], ...prev];
+      });
+      return data[0];
+    }
     return newProduct;
   };
 
@@ -86,7 +102,13 @@ export const DataProvider = ({ children }) => {
   const addRecord = async (record) => {
     const prodExists = products.find(p => p.nome.toLowerCase() === record.produto_nome.toLowerCase());
     if (!prodExists) {
-      await supabase.from('products').insert([{ nome: record.produto_nome, setor: record.setor || 'Geral' }]);
+      const { data } = await supabase.from('products').insert([{ nome: record.produto_nome, setor: record.setor || 'Geral' }]).select();
+      if (data && data.length > 0) {
+        setProducts(prev => {
+          if (prev.find(p => p.id === data[0].id)) return prev;
+          return [data[0], ...prev];
+        });
+      }
     }
 
     const urgency = calculateUrgency(record.quantidade_atual, record.quantidade_ideal);
@@ -101,18 +123,27 @@ export const DataProvider = ({ children }) => {
     // remove id if generated locally so supabase inserts valid UUID
     delete newRecord.id; 
     
-    await supabase.from('records').insert([newRecord]);
+    const { data: insertedData } = await supabase.from('records').insert([newRecord]).select();
+    if (insertedData && insertedData.length > 0) {
+      setRecords(prev => {
+        if (prev.find(r => r.id === insertedData[0].id)) return prev;
+        return [insertedData[0], ...prev];
+      });
+    }
   };
 
   const updateRecordStatus = async (id, newStatus) => {
+    setRecords(prev => prev.map(r => r.id === id ? { ...r, status_compra: newStatus, data_atualizacao: new Date().toISOString() } : r));
     await supabase.from('records').update({ status_compra: newStatus, data_atualizacao: new Date().toISOString() }).eq('id', id);
   };
 
   const markAsArrived = async (id) => {
+    setRecords(prev => prev.map(r => r.id === id ? { ...r, chegou: true, data_atualizacao: new Date().toISOString() } : r));
     await supabase.from('records').update({ chegou: true, data_atualizacao: new Date().toISOString() }).eq('id', id);
   };
 
   const deleteRecord = async (id) => {
+    setRecords(prev => prev.filter(r => r.id !== id));
     await supabase.from('records').delete().eq('id', id);
   };
 

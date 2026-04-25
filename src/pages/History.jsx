@@ -26,11 +26,10 @@ export default function History() {
   };
 
   // History is defined as everything that "chegou"
-  // For Seller: only their arrived records. For Buyer: all arrived records.
+  // Todos veem todo o histórico agora, conforme solicitado.
   const historyRecords = records.filter(r => {
     if (!r.chegou) return false;
-    const visible = user.role === 'vendedor' ? r.vendedor_id === user.uid : true;
-    return visible && smartSearch(r.produto_nome, searchTerm);
+    return smartSearch(r.produto_nome, searchTerm);
   }).sort((a, b) => new Date(b.data_atualizacao) - new Date(a.data_atualizacao));
 
   return (
