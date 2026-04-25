@@ -19,15 +19,18 @@ export const AuthProvider = ({ children }) => {
       }
     };
     
-    const storedUser = localStorage.getItem('@MercadoriaAuth:user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const storedLocalUser = localStorage.getItem('@MercadoriaAuth:user');
+    const storedSessionUser = sessionStorage.getItem('@MercadoriaAuth:user');
+    if (storedLocalUser) {
+      setUser(JSON.parse(storedLocalUser));
+    } else if (storedSessionUser) {
+      setUser(JSON.parse(storedSessionUser));
     }
     
     fetchUsers().finally(() => setLoading(false));
   }, []);
 
-  const login = async (username, password) => {
+  const login = async (username, password, keepConnected = true) => {
     const searchUsername = username.trim().toLowerCase();
     
     const { data: dbUsers, error } = await supabase
@@ -42,7 +45,15 @@ export const AuthProvider = ({ children }) => {
 
     const foundUser = dbUsers[0];
     setUser(foundUser);
-    localStorage.setItem('@MercadoriaAuth:user', JSON.stringify(foundUser));
+    
+    if (keepConnected) {
+      localStorage.setItem('@MercadoriaAuth:user', JSON.stringify(foundUser));
+      sessionStorage.removeItem('@MercadoriaAuth:user');
+    } else {
+      sessionStorage.setItem('@MercadoriaAuth:user', JSON.stringify(foundUser));
+      localStorage.removeItem('@MercadoriaAuth:user');
+    }
+    
     return foundUser;
   };
 
@@ -83,7 +94,12 @@ export const AuthProvider = ({ children }) => {
     
     const updatedSession = { ...user, password: newPassword };
     setUser(updatedSession);
-    localStorage.setItem('@MercadoriaAuth:user', JSON.stringify(updatedSession));
+    
+    if (localStorage.getItem('@MercadoriaAuth:user')) {
+      localStorage.setItem('@MercadoriaAuth:user', JSON.stringify(updatedSession));
+    } else if (sessionStorage.getItem('@MercadoriaAuth:user')) {
+      sessionStorage.setItem('@MercadoriaAuth:user', JSON.stringify(updatedSession));
+    }
   };
 
   const deleteUser = async (uid) => {
@@ -98,6 +114,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('@MercadoriaAuth:user');
+    sessionStorage.removeItem('@MercadoriaAuth:user');
   };
 
   return (

@@ -6,13 +6,14 @@ export default function Login() {
   const { login } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [keepConnected, setKeepConnected] = useState(true);
   const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     try {
       setError('');
-      login(username, password);
+      login(username, password, keepConnected);
     } catch (err) {
       setError(err.message);
     }
@@ -64,6 +65,20 @@ export default function Login() {
               required 
             />
           </div>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <input 
+              type="checkbox" 
+              id="keepConnected" 
+              checked={keepConnected} 
+              onChange={(e) => setKeepConnected(e.target.checked)} 
+              style={{ cursor: 'pointer', width: '16px', height: '16px', accentColor: 'var(--accent-blue)' }} 
+            />
+            <label htmlFor="keepConnected" style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', cursor: 'pointer', userSelect: 'none' }}>
+              Manter conectado
+            </label>
+          </div>
+
           <button type="submit" style={{
             background: 'var(--accent-blue)', color: 'var(--text-primary)', padding: '0.75rem', borderRadius: 'var(--radius-sm)',
             border: 'none', fontWeight: '600', cursor: 'pointer', marginTop: '1rem'
