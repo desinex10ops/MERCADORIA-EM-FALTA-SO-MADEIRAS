@@ -6,17 +6,19 @@ import { NavLink } from 'react-router-dom';
 
 export default function Layout({ children }) {
   const { user, logout, changePassword } = useAuth();
-  const { records } = useData();
+  const { records, readNotificationIds } = useData();
 
   const isVendedorFilial = user?.role === 'vendedor' && user?.loja === 'Ki Madeiras';
   const isVendedorMatriz = user?.role === 'vendedor' && (user?.loja === 'Só Madeiras' || !user?.loja);
 
-  const arrivedCount = (records || []).filter(r => {
+  const arrivedRecords = (records || []).filter(r => {
     if (!r.chegou) return false;
     if (isVendedorFilial) return r.loja === 'Ki Madeiras' || r.vendedor_nome?.includes('Ki Madeiras');
     if (isVendedorMatriz) return r.loja !== 'Ki Madeiras' && !r.vendedor_nome?.includes('Ki Madeiras');
     return true;
-  }).length;
+  });
+
+  const unreadCount = arrivedRecords.filter(r => !(readNotificationIds || []).includes(r.id)).length;
   
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -164,12 +166,14 @@ export default function Layout({ children }) {
               fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
             })}
           >
-            <Bell size={18} color={arrivedCount > 0 ? "var(--status-green)" : "currentColor"} /> NOTIFICAÇÕES
-            {arrivedCount > 0 && (
-              <span style={{ background: 'var(--status-green)', color: '#fff', borderRadius: '12px', padding: '0.1rem 0.5rem', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                {arrivedCount}
-              </span>
-            )}
+            <Bell size={18} color={unreadCount > 0 ? "var(--status-green)" : "currentColor"} /> NOTIFICAÇÕES
+            <span style={{ 
+              background: unreadCount > 0 ? 'var(--status-green)' : 'rgba(255,255,255,0.1)', 
+              color: unreadCount > 0 ? '#fff' : 'var(--text-secondary)', 
+              borderRadius: '12px', padding: '0.1rem 0.5rem', fontSize: '0.75rem', fontWeight: 'bold' 
+            }}>
+              {unreadCount}
+            </span>
           </NavLink>
 
           <NavLink 

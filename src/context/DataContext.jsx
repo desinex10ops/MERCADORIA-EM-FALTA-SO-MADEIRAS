@@ -56,6 +56,13 @@ export const DataProvider = ({ children }) => {
     }
     return [];
   });
+  const [readNotificationIds, setReadNotificationIds] = useState(() => {
+    const saved = localStorage.getItem('@MercadoriaData:read_notifications');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(true);
 
   // Load records, quotes and economy from local storage and Supabase
@@ -638,6 +645,36 @@ export const DataProvider = ({ children }) => {
     localStorage.setItem('@MercadoriaData:filial_purchases', JSON.stringify(updated));
   };
 
+  const markNotificationAsRead = (id) => {
+    setReadNotificationIds(prev => {
+      if (prev.includes(id)) return prev;
+      const updated = [...prev, id];
+      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const markAllNotificationsAsRead = (notificationIds = []) => {
+    setReadNotificationIds(prev => {
+      const updated = Array.from(new Set([...prev, ...notificationIds]));
+      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const toggleNotificationRead = (id) => {
+    setReadNotificationIds(prev => {
+      let updated;
+      if (prev.includes(id)) {
+        updated = prev.filter(i => i !== id);
+      } else {
+        updated = [...prev, id];
+      }
+      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
     <DataContext.Provider value={{ 
       records, 
@@ -669,7 +706,11 @@ export const DataProvider = ({ children }) => {
       addProduct,
       addProductsBulk,
       deleteRecord,
-      deleteFilialPurchase
+      deleteFilialPurchase,
+      readNotificationIds,
+      markNotificationAsRead,
+      markAllNotificationsAsRead,
+      toggleNotificationRead
     }}>
       {children}
     </DataContext.Provider>
