@@ -159,11 +159,13 @@ export default function BuyerDashboard() {
     );
   };
 
+  const selectableRecords = filteredRecords.filter(r => !r.chegou && r.status_compra !== 'Comprou' && r.status_compra !== 'Comprado' && r.status_compra !== 'Comprado Direto por Admin Ki Madeiras');
+
   const toggleSelectAll = () => {
-    if (selectedItemIds.length === filteredRecords.length && filteredRecords.length > 0) {
+    if (selectedItemIds.length >= selectableRecords.length && selectableRecords.length > 0) {
       setSelectedItemIds([]);
     } else {
-      setSelectedItemIds(filteredRecords.map(r => r.id));
+      setSelectedItemIds(selectableRecords.map(r => r.id));
     }
   };
 
@@ -548,7 +550,7 @@ export default function BuyerDashboard() {
                   onClick={toggleSelectAll}
                   style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', fontWeight: '600', cursor: 'pointer', fontSize: '0.85rem' }}
                 >
-                  {selectedItemIds.length === filteredRecords.length && filteredRecords.length > 0 ? 'Desmarcar Todos' : 'Selecionar Todos'}
+                  {selectedItemIds.length >= selectableRecords.length && selectableRecords.length > 0 ? 'Desmarcar Todos' : 'Selecionar Pendentes'}
                 </button>
 
                 <button
