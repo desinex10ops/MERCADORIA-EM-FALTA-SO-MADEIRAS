@@ -32,15 +32,27 @@ export const DataProvider = ({ children }) => {
   const [records, setRecords] = useState([]);
   const [purchases, setPurchases] = useState([]);
   const [products, setProducts] = useState([]);
+  const [deletedSupplierIds, setDeletedSupplierIds] = useState(() => {
+    const saved = localStorage.getItem('@MercadoriaData:deleted_supplier_ids');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [];
+  });
+
   const [suppliers, setSuppliers] = useState(() => {
     const saved = localStorage.getItem('@MercadoriaData:suppliers');
+    const delSaved = localStorage.getItem('@MercadoriaData:deleted_supplier_ids');
+    const delList = delSaved ? (JSON.parse(delSaved) || []) : [];
+
+    let baseList = defaultSuppliersList;
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) baseList = parsed;
       } catch (e) {}
     }
-    return defaultSuppliersList;
+    return baseList.filter(s => !delList.includes(s.id) && !delList.includes((s.nome || '').toLowerCase().trim()));
   });
   const [supplierQuotes, setSupplierQuotes] = useState([]);
   const [economyHistory, setEconomyHistory] = useState([]);
@@ -99,7 +111,13 @@ export const DataProvider = ({ children }) => {
           localStorage.setItem('@MercadoriaData:records', JSON.stringify(localRecords));
         }
         if (localProducts) setProducts(localProducts);
-        if (localSuppliers) setSuppliers(localSuppliers);
+        if (localSuppliers) {
+          const delSaved = localStorage.getItem('@MercadoriaData:deleted_supplier_ids');
+          const delList = delSaved ? (JSON.parse(delSaved) || []) : [];
+          const filteredSuppliers = localSuppliers.filter(s => !delList.includes(s.id) && !delList.includes((s.nome || '').toLowerCase().trim()));
+          setSuppliers(filteredSuppliers);
+          localStorage.setItem('@MercadoriaData:suppliers', JSON.stringify(filteredSuppliers));
+        }
         if (localQuotes && localQuotes.length > 0) {
           setSupplierQuotes(prev => {
             const normDb = localQuotes.map(normalizeQuote);
@@ -264,11 +282,24 @@ export const DataProvider = ({ children }) => {
   };
 
   const deleteSupplierContact = (id) => {
+    let supplierToDelete = suppliers.find(s => s.id === id);
+    const deletedIdentifiers = [id];
+    if (supplierToDelete && supplierToDelete.nome) {
+      deletedIdentifiers.push(supplierToDelete.nome.toLowerCase().trim());
+    }
+
+    setDeletedSupplierIds(prev => {
+      const updatedDel = Array.from(new Set([...prev, ...deletedIdentifiers]));
+      localStorage.setItem('@MercadoriaData:deleted_supplier_ids', JSON.stringify(updatedDel));
+      return updatedDel;
+    });
+
     setSuppliers(prev => {
-      const updated = prev.filter(s => s.id !== id);
+      const updated = prev.filter(s => s.id !== id && (supplierToDelete ? s.nome?.toLowerCase().trim() !== supplierToDelete.nome?.toLowerCase().trim() : true));
       localStorage.setItem('@MercadoriaData:suppliers', JSON.stringify(updated));
       return updated;
     });
+
     try {
       supabase.from('suppliers').delete().eq('id', id).then();
     } catch (e) {}

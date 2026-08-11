@@ -68,8 +68,15 @@ export const AuthProvider = ({ children }) => {
 
   // Synchronously initialize users list from localStorage or defaults
   const [usersInfo, setUsersInfo] = useState(() => {
+    const delSaved = localStorage.getItem('@MercadoriaAuth:deleted_usernames');
+    const delUsers = delSaved ? (JSON.parse(delSaved) || []) : [];
+
     const map = new Map();
-    defaultInitialUsers.forEach(u => map.set(u.username.toLowerCase(), u));
+    defaultInitialUsers.forEach(u => {
+      if (!delUsers.includes(u.username.toLowerCase())) {
+        map.set(u.username.toLowerCase(), u);
+      }
+    });
 
     const saved = localStorage.getItem('@MercadoriaAuth:users_list');
     if (saved) {
@@ -77,7 +84,9 @@ export const AuthProvider = ({ children }) => {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
           parsed.forEach(u => {
-            if (u && u.username) map.set(u.username.toLowerCase(), u);
+            if (u && u.username && !delUsers.includes(u.username.toLowerCase())) {
+              map.set(u.username.toLowerCase(), u);
+            }
           });
         }
       } catch (e) {}
@@ -93,13 +102,22 @@ export const AuthProvider = ({ children }) => {
       try {
         const { data } = await supabase.from('users').select('*');
         if (data && data.length > 0) {
+          const delSaved = localStorage.getItem('@MercadoriaAuth:deleted_usernames');
+          const delUsers = delSaved ? (JSON.parse(delSaved) || []) : [];
+
           setUsersInfo(prev => {
             const map = new Map();
             // Put remote users first
-            data.forEach(u => map.set(u.username, u));
+            data.forEach(u => {
+              if (u && u.username && !delUsers.includes(u.username.toLowerCase())) {
+                map.set(u.username.toLowerCase(), u);
+              }
+            });
             // Supplement with local users
             prev.forEach(u => {
-              if (!map.has(u.username)) map.set(u.username, u);
+              if (u && u.username && !delUsers.includes(u.username.toLowerCase()) && !map.has(u.username.toLowerCase())) {
+                map.set(u.username.toLowerCase(), u);
+              }
             });
             const merged = Array.from(map.values());
             localStorage.setItem('@MercadoriaAuth:users_list', JSON.stringify(merged));
@@ -248,12 +266,22 @@ export const AuthProvider = ({ children }) => {
 
   const deleteUser = async (target) => {
     const norm = (s) => (s || '').trim().toLowerCase();
-    const updatedUsers = usersInfo.filter(u => norm(u.username) !== norm(target) && u.uid !== target);
+    const targetNorm = norm(target);
+
+    // Save to deleted usernames list
+    const delSaved = localStorage.getItem('@MercadoriaAuth:deleted_usernames');
+    const delUsers = delSaved ? (JSON.parse(delSaved) || []) : [];
+    if (!delUsers.includes(targetNorm)) {
+      delUsers.push(targetNorm);
+      localStorage.setItem('@MercadoriaAuth:deleted_usernames', JSON.stringify(delUsers));
+    }
+
+    const updatedUsers = usersInfo.filter(u => norm(u.username) !== targetNorm && u.uid !== target);
     setUsersInfo(updatedUsers);
     localStorage.setItem('@MercadoriaAuth:users_list', JSON.stringify(updatedUsers));
 
     try {
-      await supabase.from('users').delete().eq('username', norm(target));
+      await supabase.from('users').delete().eq('username', targetNorm);
     } catch (e) {}
   };
 
