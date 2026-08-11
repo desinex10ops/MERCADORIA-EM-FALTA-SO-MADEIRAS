@@ -105,17 +105,24 @@ export async function fetchNFeByChave(chaveAcesso) {
   const cnpj = cleanChave.substring(6, 20);
   const nfNum = cleanChave.substring(25, 34);
 
-  // Try fetching from Meu DANFE API v2 if available
+  // 1. Integrar com a API Meu DANFE v2 (api.meudanfe.com.br/v2)
   try {
+    // Passo 1: Adicionar NF-e pela Chave de Acesso no Meu DANFE
+    await fetch(`https://api.meudanfe.com.br/v2/fd/add/${cleanChave}`, {
+      method: 'PUT'
+    }).catch(() => {});
+
+    // Passo 2: Baixar XML completo da NF-e
     const res = await fetch(`https://api.meudanfe.com.br/v2/fd/get/xml/${cleanChave}`);
     if (res.ok) {
       const xmlText = await res.text();
-      if (xmlText && xmlText.includes('<nNF>')) {
-        return parseNFeXml(xmlText);
+      if (xmlText && (xmlText.includes('<nNF>') || xmlText.includes('<det>'))) {
+        const parsed = parseNFeXml(xmlText);
+        if (parsed.success) return parsed;
       }
     }
   } catch (e) {
-    // Fall back to structured parser for DANFE Key
+    // Em caso de offline ou limite de consulta, prossegue com parser estruturado da Chave
   }
 
   // Smart structured demo items for the parsed key
