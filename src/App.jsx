@@ -24,9 +24,6 @@ function PrivateRoute({ children, allowedRoles, roleRequired }) {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" />;
   }
-  if (user.role === 'admin_filial' && !allowedRoles?.includes('admin_filial')) {
-    return <Navigate to="/filial-ki-madeiras" />;
-  }
   return children;
 }
 

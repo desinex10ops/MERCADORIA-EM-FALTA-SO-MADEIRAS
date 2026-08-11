@@ -19,6 +19,8 @@ export default function SupplierQuotePage() {
   const [packModes, setPackModes] = useState({}); // { [id]: 'unit' | 'pack' }
   const [packSizes, setPackSizes] = useState({}); // { [id]: 12 }
   const [packPrices, setPackPrices] = useState({}); // { [id]: 36.00 }
+  const [paymentTerms, setPaymentTerms] = useState('');
+  const [minOrderValue, setMinOrderValue] = useState('');
   const [unavailable, setUnavailable] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -107,6 +109,8 @@ export default function SupplierQuotePage() {
       representativeName: representativeName.trim() || 'Representante de Vendas',
       supplierPhone: supplierPhone.trim(),
       deliveryDate: deliveryDate || null,
+      paymentTerms: paymentTerms.trim().toUpperCase() || 'À VISTA',
+      minOrderValue: minOrderValue ? Number(minOrderValue) : 0,
       items: itemsSummary,
       totalValue,
       timestamp: new Date().toISOString(),
@@ -337,6 +341,38 @@ export default function SupplierQuotePage() {
                 );
               })
             )}
+          </div>
+
+          {/* Condições Comerciais (Ao final da lista de produtos) */}
+          <div style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid var(--accent-blue)', padding: '1.25rem', borderRadius: 'var(--radius-sm, 8px)', marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+            <div>
+              <label style={{ fontSize: '0.8rem', color: '#fff', display: 'block', fontWeight: 'bold', marginBottom: '0.35rem' }}>
+                💳 Melhor Prazo de Pagamento
+              </label>
+              <input 
+                type="text" 
+                placeholder="EX: 30 / 40 / 60 DIAS, À VISTA..." 
+                value={paymentTerms}
+                onChange={e => setPaymentTerms(e.target.value.toUpperCase())}
+                spellCheck={true}
+                lang="pt-BR"
+                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm, 6px)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ fontSize: '0.8rem', color: '#fff', display: 'block', fontWeight: 'bold', marginBottom: '0.35rem' }}>
+                🏷️ Valor Mínimo por Pedido (R$)
+              </label>
+              <input 
+                type="number" 
+                step="0.01" 
+                placeholder="EX: 1500.00 (Deixe 0 se não houver)" 
+                value={minOrderValue}
+                onChange={e => setMinOrderValue(e.target.value)}
+                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm, 6px)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+              />
+            </div>
           </div>
 
           <button 

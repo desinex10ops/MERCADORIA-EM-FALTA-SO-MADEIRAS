@@ -845,7 +845,7 @@ export default function BuyerDashboard() {
                           </div>
 
                           {q.supplierPhone && (
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                               <span>Whats: {q.supplierPhone}</span>
                               <a
                                 href={`https://api.whatsapp.com/send?phone=${String(q.supplierPhone || '').replace(/\D/g, '')}`}
@@ -854,6 +854,13 @@ export default function BuyerDashboard() {
                               >
                                 [ Abrir Whats ]
                               </a>
+                            </div>
+                          )}
+
+                          {(q.paymentTerms || q.minOrderValue > 0) && (
+                            <div style={{ fontSize: '0.75rem', background: 'rgba(59,130,246,0.1)', border: '1px solid var(--accent-blue)', padding: '0.35rem 0.6rem', borderRadius: '4px', marginBottom: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', color: '#fff' }}>
+                              {q.paymentTerms && <span>💳 <strong>Prazo:</strong> {q.paymentTerms}</span>}
+                              {q.minOrderValue > 0 && <span>🏷️ <strong>Ped. Mínimo:</strong> R$ {Number(q.minOrderValue).toFixed(2)}</span>}
                             </div>
                           )}
 
