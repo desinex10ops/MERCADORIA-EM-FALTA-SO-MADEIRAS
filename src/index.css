@@ -216,6 +216,12 @@ input, button, select, textarea {
   .desktop-tab-bar {
     display: none !important;
   }
+  .glass-panel {
+    padding: 1.15rem 1rem !important;
+  }
+  .form-responsive-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 @media (min-width: 769px) {

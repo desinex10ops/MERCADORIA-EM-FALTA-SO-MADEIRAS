@@ -195,7 +195,7 @@ export default function TeamManagementPage() {
                 <Plus size={20} color="var(--status-green)" /> Adicionar Representante Manualmente
               </h3>
 
-              <form onSubmit={handleAddSupplierContact} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+              <form onSubmit={handleAddSupplierContact} className="form-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
                 <div>
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>Empresa / Distribuidora *</label>
                   <input 
@@ -383,7 +383,7 @@ export default function TeamManagementPage() {
                 <UserPlus size={20} color="var(--accent-blue)" /> Cadastrar Novo Membro na Equipe
               </h3>
 
-              <form onSubmit={handleAddUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem' }}>
+              <form onSubmit={handleAddUser} className="form-responsive-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
                 <div>
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>Usuário / Login *</label>
                   <input 
