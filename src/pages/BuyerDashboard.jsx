@@ -545,13 +545,6 @@ export default function BuyerDashboard() {
 
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button
-                  onClick={() => setShowDanfeModal(true)}
-                  style={{ background: 'var(--status-green)', color: '#fff', padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-sm)', border: 'none', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', boxShadow: '0 2px 10px rgba(16,185,129,0.3)' }}
-                >
-                  <FileCode size={16} /> ⚡ Baixar Nota Fiscal (DANFE / XML)
-                </button>
-
-                <button
                   onClick={toggleSelectAll}
                   style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', fontWeight: '600', cursor: 'pointer', fontSize: '0.85rem' }}
                 >
@@ -740,13 +733,6 @@ export default function BuyerDashboard() {
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <button
-                  onClick={handleGenerate5DemoQuotes}
-                  style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid var(--border-color)', padding: '0.75rem 1.25rem', borderRadius: 'var(--radius-sm)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
-                >
-                  <Sparkles size={16} color="var(--status-yellow)" /> Gerar 5 Orçamentos de Exemplo
-                </button>
-
                 {supplierQuotes.length > 0 && (
                   <button
                     onClick={handleOpenApprovalModalForCheapest}
@@ -1526,9 +1512,6 @@ export default function BuyerDashboard() {
           </div>
         </div>
       )}
-
-      {/* Modal de Baixa por DANFE / Nota Fiscal */}
-      <DanfeModal isOpen={showDanfeModal} onClose={() => setShowDanfeModal(false)} />
     </Layout>
   );
 }

@@ -47,22 +47,14 @@ export const DataProvider = ({ children }) => {
   const [filialPurchases, setFilialPurchases] = useState(() => {
     const saved = localStorage.getItem('@MercadoriaData:filial_purchases');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try { 
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.filter(item => item.id !== 'fp_1');
+        }
+      } catch (e) {}
     }
-    return [
-      {
-        id: 'fp_1',
-        produto_nome: 'TINTAS SUVINIL BRANCO NEVE 18L',
-        fornecedor: 'DISTRIBUIDORA TINTAS & CIA',
-        quantidade: 10,
-        valor_unitario: 280.00,
-        valor_total: 2800.00,
-        comprador_nome: 'Admin Ki Madeiras (Gerente)',
-        loja: 'Ki Madeiras',
-        data_compra: new Date().toISOString(),
-        tipo: 'Compra Direta Filial'
-      }
-    ];
+    return [];
   });
   const [loading, setLoading] = useState(true);
 
