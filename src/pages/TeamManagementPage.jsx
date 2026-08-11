@@ -13,13 +13,15 @@ export default function TeamManagementPage() {
 
   const [activeTab, setActiveTab] = useState('agenda'); // 'agenda' | 'equipe'
 
+  const isGeneralAdmin = user?.role === 'comprador';
+
   // Form states for Team Member
   const [username, setUsername] = useState('');
   const [nome, setNome] = useState('');
   const [password, setPassword] = useState('123');
   const [setor, setSetor] = useState('Geral');
   const [loja, setLoja] = useState('Só Madeiras');
-  const [role, setRole] = useState('cotador');
+  const [role, setRole] = useState(isGeneralAdmin ? 'cotador' : 'vendedor');
 
   // Form states for Representative Agenda
   const [empresaNome, setEmpresaNome] = useState('');
@@ -43,13 +45,15 @@ export default function TeamManagementPage() {
       return;
     }
 
+    const roleToRegister = isGeneralAdmin ? role : 'vendedor';
+
     const res = registerUser({
       username: username.trim().toLowerCase(),
       nome: nome.trim(),
       password: password.trim() || '123',
       setor: setor.trim(),
       loja,
-      role
+      role: roleToRegister
     });
 
     if (!res.success) {
@@ -57,7 +61,7 @@ export default function TeamManagementPage() {
       return;
     }
 
-    setSuccessMsg(`Usuário "${nome}" cadastrado com sucesso com o cargo de ${role === 'comprador' ? 'Comprador/Admin' : role === 'cotador' ? 'Auxiliar de Cotações' : 'Vendedor'}!`);
+    setSuccessMsg(`Usuário "${nome}" cadastrado com sucesso com o cargo de ${roleToRegister === 'comprador' ? 'Comprador/Admin' : roleToRegister === 'cotador' ? 'Auxiliar de Cotações' : 'Vendedor'}!`);
     setUsername('');
     setNome('');
     setPassword('123');
@@ -96,15 +100,24 @@ export default function TeamManagementPage() {
   };
 
   const handleChangeRole = (targetUsername, newRole) => {
+    if (!isGeneralAdmin) {
+      alert('Apenas o Administrador Geral (Juliano) pode alterar permissões e cargos de usuários.');
+      return;
+    }
     updateUserRole(targetUsername, newRole);
     setSuccessMsg(`Cargo de ${targetUsername} atualizado para ${newRole}!`);
     setTimeout(() => setSuccessMsg(''), 3000);
   };
 
   const handleDeleteUser = (targetUsername) => {
+    const targetUser = (users || []).find(u => u.username === targetUsername);
+    if (!isGeneralAdmin && (targetUser?.role === 'comprador' || targetUser?.role === 'admin_filial')) {
+      alert('Você não tem permissão para excluir usuários administradores.');
+      return;
+    }
     if (window.confirm(`Tem certeza que deseja remover o acesso de "${targetUsername}"?`)) {
       deleteUser(targetUsername);
-      setSuccessMsg(`Acesso de ${targetUsername} removido.`);
+      setSuccessMsg(`Acesso de ${targetUsername} removido permanentemente.`);
       setTimeout(() => setSuccessMsg(''), 3000);
     }
   };
@@ -433,13 +446,18 @@ export default function TeamManagementPage() {
                 <div>
                   <label style={{ fontSize: '0.8rem', color: 'var(--status-yellow)', display: 'block', marginBottom: '0.3rem', fontWeight: 700 }}>Autorização / Cargo *</label>
                   <select
-                    value={role}
+                    value={isGeneralAdmin ? role : 'vendedor'}
                     onChange={e => setRole(e.target.value)}
+                    disabled={!isGeneralAdmin}
                     style={{ width: '100%', padding: '0.7rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--accent-blue)', color: '#fff', fontWeight: 'bold' }}
                   >
-                    <option value="cotador">📋 Auxiliar de Cotações (Sem Aprovação)</option>
-                    <option value="comprador">👑 Comprador / Admin (Acesso Total)</option>
                     <option value="vendedor">📦 Vendedor de Loja (Faltas)</option>
+                    {isGeneralAdmin && (
+                      <>
+                        <option value="cotador">📋 Auxiliar de Cotações (Sem Aprovação)</option>
+                        <option value="comprador">👑 Comprador / Admin (Acesso Total)</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
@@ -492,8 +510,9 @@ export default function TeamManagementPage() {
                           <td style={{ padding: '0.85rem 0.75rem' }}>
                             <select
                               value={uRole}
+                              disabled={!isGeneralAdmin}
                               onChange={(e) => handleChangeRole(u.username, e.target.value)}
-                              style={{ padding: '0.4rem 0.6rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: isAdmin ? 'var(--status-green)' : isCotadorNoApproval ? 'var(--accent-blue)' : 'var(--status-yellow)', fontWeight: 'bold', fontSize: '0.8rem' }}
+                              style={{ padding: '0.4rem 0.6rem', borderRadius: '6px', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: isAdmin ? 'var(--status-green)' : isCotadorNoApproval ? 'var(--accent-blue)' : 'var(--status-yellow)', fontWeight: 'bold', fontSize: '0.8rem', cursor: isGeneralAdmin ? 'pointer' : 'not-allowed' }}
                             >
                               <option value="comprador">👑 Comprador / Admin</option>
                               <option value="cotador">📋 Auxiliar de Cotações</option>
@@ -519,13 +538,19 @@ export default function TeamManagementPage() {
 
                           <td style={{ padding: '0.85rem 0.75rem', textAlign: 'right' }}>
                             {u.username !== user?.username && (
-                              <button
-                                onClick={() => handleDeleteUser(u.username)}
-                                style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--status-red)', border: '1px solid rgba(239,68,68,0.3)', padding: '0.4rem 0.65rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
-                                title="Remover acesso"
-                              >
-                                <Trash2 size={14} /> Excluir
-                              </button>
+                              (!isGeneralAdmin && (uRole === 'comprador' || uRole === 'admin_filial')) ? (
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }} title="Apenas Admin Geral pode excluir admins">
+                                  <Lock size={13} /> Protegido
+                                </span>
+                              ) : (
+                                <button
+                                  onClick={() => handleDeleteUser(u.username)}
+                                  style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--status-red)', border: '1px solid rgba(239,68,68,0.3)', padding: '0.4rem 0.65rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}
+                                  title="Remover acesso"
+                                >
+                                  <Trash2 size={14} /> Excluir
+                                </button>
+                              )
                             )}
                           </td>
                         </tr>

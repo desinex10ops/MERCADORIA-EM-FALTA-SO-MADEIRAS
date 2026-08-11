@@ -133,29 +133,29 @@ export default function Layout({ children }) {
           </NavLink>
 
           {(user?.role === 'comprador' || user?.role === 'cotador') && (
-            <>
-              <NavLink 
-                to="/equipe" 
-                style={({ isActive }) => ({
-                  padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
-                  borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
-                  fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
-                })}
-              >
-                <Users size={18} color="var(--accent-blue)" /> GESTÃO DE EQUIPE
-              </NavLink>
+            <NavLink 
+              to="/equipe" 
+              style={({ isActive }) => ({
+                padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
+                borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
+              })}
+            >
+              <Users size={18} color="var(--accent-blue)" /> GESTÃO DE EQUIPE
+            </NavLink>
+          )}
 
-              <NavLink 
-                to="/economia" 
-                style={({ isActive }) => ({
-                  padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
-                  borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
-                  fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
-                })}
-              >
-                <TrendingDown size={18} color="var(--status-green)" /> ECONOMIA
-              </NavLink>
-            </>
+          {user?.role === 'comprador' && (
+            <NavLink 
+              to="/economia" 
+              style={({ isActive }) => ({
+                padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
+                borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
+              })}
+            >
+              <TrendingDown size={18} color="var(--status-green)" /> ECONOMIA
+            </NavLink>
           )}
 
           <NavLink 

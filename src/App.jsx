@@ -75,7 +75,7 @@ function App() {
         } />
 
         <Route path="/economia" element={
-          <PrivateRoute allowedRoles={['comprador', 'cotador']}>
+          <PrivateRoute allowedRoles={['comprador']}>
             <EconomyPage />
           </PrivateRoute>
         } />
