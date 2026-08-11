@@ -2,9 +2,10 @@ import React, { useState, useRef } from 'react';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-import { PlusCircle, Package, Clock, Camera, X, CheckCircle, AlertTriangle, Sparkles, Building2, Eye, Lock, ShoppingCart, Send, UserPlus, Users, Trash2 } from 'lucide-react';
+import { PlusCircle, Package, Clock, Camera, X, CheckCircle, AlertTriangle, Sparkles, Building2, Eye, Lock, ShoppingCart, Send, UserPlus, Users, Trash2, FileCode } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import DanfeModal from '../components/DanfeModal';
 
 export default function FilialPanel() {
   const { user, usersInfo, registerUser, deleteUser } = useAuth();
@@ -18,6 +19,7 @@ export default function FilialPanel() {
   const fileInputRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('filial'); // 'filial' | 'matriz' | 'compras_diretas'
+  const [showDanfeModal, setShowDanfeModal] = useState(false);
 
   // State for Direct Purchase Form
   const [directProdName, setDirectProdName] = useState('');
@@ -141,8 +143,17 @@ export default function FilialPanel() {
               </p>
             </div>
           </div>
-          <div style={{ background: 'rgba(37,99,235,0.15)', color: 'var(--accent-blue)', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>
-            {user?.role === 'admin_filial' ? 'CARGO: ADMIN KI MADEIRAS' : 'LOJA: KI MADEIRAS'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowDanfeModal(true)}
+              style={{ background: 'var(--status-green)', color: '#fff', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: 'none', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+            >
+              <FileCode size={16} /> ⚡ Baixar Nota Fiscal (DANFE / XML)
+            </button>
+
+            <div style={{ background: 'rgba(37,99,235,0.15)', color: 'var(--accent-blue)', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>
+              {user?.role === 'admin_filial' ? 'CARGO: ADMIN KI MADEIRAS' : 'LOJA: KI MADEIRAS'}
+            </div>
           </div>
         </div>
 
@@ -667,6 +678,8 @@ export default function FilialPanel() {
         </div>
 
       </div>
+
+      <DanfeModal isOpen={showDanfeModal} onClose={() => setShowDanfeModal(false)} />
     </Layout>
   );
 }

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import Layout from '../components/Layout';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { AlertTriangle, PackageSearch, Activity, CheckCircle, Truck, Clock, Trophy, X, Users, UserPlus, Trash2, History, Send, Share2, DollarSign, CheckCheck, Sparkles, Building2, Copy, TrendingDown } from 'lucide-react';
+import { AlertTriangle, PackageSearch, Activity, CheckCircle, Truck, Clock, Trophy, X, Users, UserPlus, Trash2, History, Send, Share2, DollarSign, CheckCheck, Sparkles, Building2, Copy, TrendingDown, FileCode } from 'lucide-react';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import DanfeModal from '../components/DanfeModal';
 
 export default function BuyerDashboard() {
   const { records, purchases, suppliers, supplierQuotes, filialPurchases, approveCheapestQuotes, economyHistory, updateRecordStatus, markAsArrived, getProductPriceStats, getProductPriceHistory, addPurchase, addRecord, addMultipleSupplierQuotes, clearSupplierQuotes } = useData();
@@ -14,6 +15,7 @@ export default function BuyerDashboard() {
   const [filterUrgency, setFilterUrgency] = useState('Todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [mainTab, setMainTab] = useState('replenishment'); // 'replenishment' | 'quotes'
+  const [showDanfeModal, setShowDanfeModal] = useState(false);
 
   // Quote Generation State
   const [selectedItemIds, setSelectedItemIds] = useState([]);
@@ -542,6 +544,13 @@ export default function BuyerDashboard() {
               </div>
 
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setShowDanfeModal(true)}
+                  style={{ background: 'var(--status-green)', color: '#fff', padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-sm)', border: 'none', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem', boxShadow: '0 2px 10px rgba(16,185,129,0.3)' }}
+                >
+                  <FileCode size={16} /> ⚡ Baixar Nota Fiscal (DANFE / XML)
+                </button>
+
                 <button
                   onClick={toggleSelectAll}
                   style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', padding: '0.6rem 1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', fontWeight: '600', cursor: 'pointer', fontSize: '0.85rem' }}
@@ -1517,6 +1526,9 @@ export default function BuyerDashboard() {
           </div>
         </div>
       )}
+
+      {/* Modal de Baixa por DANFE / Nota Fiscal */}
+      <DanfeModal isOpen={showDanfeModal} onClose={() => setShowDanfeModal(false)} />
     </Layout>
   );
 }
