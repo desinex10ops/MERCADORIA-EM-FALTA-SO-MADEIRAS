@@ -9,7 +9,7 @@ import DanfeModal from '../components/DanfeModal';
 
 export default function FilialPanel() {
   const { user, usersInfo, registerUser, deleteUser } = useAuth();
-  const { products, records, addRecord, deleteRecord, addFilialPurchase, filialPurchases } = useData();
+  const { products, records, addRecord, deleteRecord, addFilialPurchase, filialPurchases, deleteFilialPurchase } = useData();
 
   const [produtoName, setProdutoName] = useState('');
   const [qtdAtual, setQtdAtual] = useState('');
@@ -717,7 +717,9 @@ export default function FilialPanel() {
                         <th style={{ padding: '0.75rem' }}>Fornecedor</th>
                         <th style={{ padding: '0.75rem' }}>Comprador (Admin Ki Madeiras)</th>
                         <th style={{ padding: '0.75rem', textAlign: 'center' }}>Qtd</th>
-                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>Total (R$)</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>Valor Unit.</th>
+                        <th style={{ padding: '0.75rem', textAlign: 'right' }}>Total Pago (R$)</th>
+                        {user?.role === 'admin_filial' && <th style={{ padding: '0.75rem', textAlign: 'center' }}>Ação</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -730,9 +732,27 @@ export default function FilialPanel() {
                           <td style={{ padding: '0.75rem', color: 'var(--accent-blue)', fontWeight: 600 }}>{fp.fornecedor}</td>
                           <td style={{ padding: '0.75rem', color: '#fff' }}>{fp.comprador_nome}</td>
                           <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold' }}>{fp.quantidade} un</td>
+                          <td style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--text-secondary)' }}>
+                            R$ {(fp.valor_unitario || 0).toFixed(2)}
+                          </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 800, color: 'var(--status-green)' }}>
                             R$ {(fp.valor_total || 0).toFixed(2)}
                           </td>
+                          {user?.role === 'admin_filial' && (
+                            <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                              <button
+                                onClick={() => {
+                                  if (window.confirm(`Apagar o pedido de "${fp.produto_nome}"? Esta ação não pode ser desfeita.`)) {
+                                    deleteFilialPurchase(fp.id);
+                                  }
+                                }}
+                                title="Apagar este pedido"
+                                style={{ background: 'rgba(239,68,68,0.15)', color: 'var(--status-red)', border: '1px solid var(--status-red)', padding: '0.3rem 0.5rem', borderRadius: '4px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 700 }}
+                              >
+                                <Trash2 size={13} /> Apagar
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       ))}
                     </tbody>

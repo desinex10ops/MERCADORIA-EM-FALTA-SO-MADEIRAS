@@ -640,6 +640,12 @@ export const DataProvider = ({ children }) => {
     return newFilialPurchase;
   };
 
+  const deleteFilialPurchase = (id) => {
+    const updated = filialPurchases.filter(fp => fp.id !== id);
+    setFilialPurchases(updated);
+    localStorage.setItem('@MercadoriaData:filial_purchases', JSON.stringify(updated));
+  };
+
   return (
     <DataContext.Provider value={{ 
       records, 
@@ -670,7 +676,8 @@ export const DataProvider = ({ children }) => {
       updateProduct,
       addProduct,
       addProductsBulk,
-      deleteRecord
+      deleteRecord,
+      deleteFilialPurchase
     }}>
       {children}
     </DataContext.Provider>
