@@ -11,6 +11,7 @@
   </head>
   <body>
     <script>
+      // Tema
       (function() {
         try {
           var theme = localStorage.getItem('@MercadoriaData:theme');
@@ -19,6 +20,19 @@
           }
         } catch (e) {}
       })();
+
+      // Force Service Worker update on every page load
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          registrations.forEach(function(reg) {
+            reg.update();
+          });
+        });
+        // Reload when new SW takes control
+        navigator.serviceWorker.addEventListener('controllerchange', function() {
+          window.location.reload();
+        });
+      }
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

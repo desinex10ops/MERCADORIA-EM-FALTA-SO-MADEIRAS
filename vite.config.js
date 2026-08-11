@@ -13,6 +13,7 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        runtimeCaching: [],
       },
       manifest: {
         name: 'Controle de Faltas',
