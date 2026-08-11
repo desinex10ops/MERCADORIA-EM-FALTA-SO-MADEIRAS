@@ -1,10 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, LayoutDashboard, Fullscreen, History, PackagePlus, Lock, X, List, ArrowUp, Sun, Moon } from 'lucide-react';
+import { useData } from '../context/DataContext';
+import { LogOut, LayoutDashboard, Fullscreen, History, PackagePlus, Lock, X, List, ArrowUp, Sun, Moon, Users, TrendingDown, Bell } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 export default function Layout({ children }) {
   const { user, logout, changePassword } = useAuth();
+  const { records } = useData();
+
+  const isVendedorFilial = user?.role === 'vendedor' && user?.loja === 'Ki Madeiras';
+  const isVendedorMatriz = user?.role === 'vendedor' && (user?.loja === 'Só Madeiras' || !user?.loja);
+
+  const arrivedCount = (records || []).filter(r => {
+    if (!r.chegou) return false;
+    if (isVendedorFilial) return r.loja === 'Ki Madeiras' || r.vendedor_nome?.includes('Ki Madeiras');
+    if (isVendedorMatriz) return r.loja !== 'Ki Madeiras' && !r.vendedor_nome?.includes('Ki Madeiras');
+    return true;
+  }).length;
   
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -82,7 +94,9 @@ export default function Layout({ children }) {
         <div className="mobile-gap" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
           <div style={{ textAlign: 'right', display: 'block' }}>
             <div style={{ fontWeight: '600', color: 'var(--accent-blue)' }}>{user?.nome}</div>
-            <div className="hide-on-mobile" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{user?.role === 'vendedor' ? user?.setor : 'Administração'}</div>
+            <div className="hide-on-mobile" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
+              {user?.role === 'vendedor' ? `${user?.setor} • ${user?.loja || 'Só Madeiras'}` : `${user?.role === 'cotador' ? 'Auxiliar de Cotações' : 'Administração'} • ${user?.loja || 'Só Madeiras'}`}
+            </div>
           </div>
           <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }} title="Alternar Tema">{theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}</button>
           <button onClick={() => setShowPasswordModal(true)} style={{ 
@@ -102,24 +116,67 @@ export default function Layout({ children }) {
 
       <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* Top Tab Bar for Navigation */}
-        <div style={{ width: '100%', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '1rem', padding: '0 2rem' }}>
+        <div style={{ width: '100%', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '1rem', padding: '0 2rem', overflowX: 'auto' }}>
           <NavLink 
             to="/" 
             style={({ isActive }) => ({
               padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
               borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
-              fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem'
+              fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
             })}
           >
             {isVendedor ? <PackagePlus size={18} /> : <LayoutDashboard size={18} />}
             Painel Principal
           </NavLink>
+
+          {(user?.role === 'comprador' || user?.role === 'cotador') && (
+            <>
+              <NavLink 
+                to="/equipe" 
+                style={({ isActive }) => ({
+                  padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
+                  borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                  fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
+                })}
+              >
+                <Users size={18} color="var(--accent-blue)" /> GESTÃO DE EQUIPE
+              </NavLink>
+
+              <NavLink 
+                to="/economia" 
+                style={({ isActive }) => ({
+                  padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
+                  borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
+                  fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
+                })}
+              >
+                <TrendingDown size={18} color="var(--status-green)" /> ECONOMIA
+              </NavLink>
+            </>
+          )}
+
+          <NavLink 
+            to="/notificacoes" 
+            style={({ isActive }) => ({
+              padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
+              borderBottom: isActive ? '2px solid var(--status-green)' : '2px solid transparent',
+              fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
+            })}
+          >
+            <Bell size={18} color={arrivedCount > 0 ? "var(--status-green)" : "currentColor"} /> NOTIFICAÇÕES
+            {arrivedCount > 0 && (
+              <span style={{ background: 'var(--status-green)', color: '#fff', borderRadius: '12px', padding: '0.1rem 0.5rem', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                {arrivedCount}
+              </span>
+            )}
+          </NavLink>
+
           <NavLink 
             to="/produtos" 
             style={({ isActive }) => ({
               padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
               borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
-              fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem'
+              fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
             })}
           >
             <List size={18} /> Catálogo
@@ -129,7 +186,7 @@ export default function Layout({ children }) {
             style={({ isActive }) => ({
               padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
               borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
-              fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem'
+              fontWeight: isActive ? '600' : 'normal', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap'
             })}
           >
             <History size={18} /> Histórico

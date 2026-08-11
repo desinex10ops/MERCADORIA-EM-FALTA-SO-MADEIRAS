@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Search, PlusCircle, Edit, ShoppingCart, Camera, X } from 'lucide-react';
+import { correctSpellingAndUppercase, spellCheckProps } from '../lib/spellChecker';
 
 export default function ProductsCatalog() {
   const { products, updateProduct, addProduct, addRecord, addProductsBulk } = useData();
@@ -59,7 +60,7 @@ export default function ProductsCatalog() {
   const handleSaveEdit = (e) => {
     e.preventDefault();
     if (!prodNome || !prodSetor) return;
-    updateProduct(editingProduct, prodNome, prodSetor);
+    updateProduct(editingProduct, correctSpellingAndUppercase(prodNome), correctSpellingAndUppercase(prodSetor));
     setEditingProduct(null);
   };
 
@@ -72,9 +73,9 @@ export default function ProductsCatalog() {
         setProdError('Você precisa adicionar pelo menos um produto na lista.');
         return;
       }
-      const lines = bulkText.split('\n');
-      const count = addProductsBulk(lines, prodSetor);
-      alert(`${count} produto(s) cadastrado(s) com sucesso!`);
+      const lines = bulkText.split('\n').map(l => correctSpellingAndUppercase(l));
+      const count = addProductsBulk(lines, correctSpellingAndUppercase(prodSetor || 'Geral'));
+      alert(`${count} produto(s) cadastrado(s) com sucesso em MAIÚSCULAS!`);
       
       setIsAddingProduct(false);
       setIsBulkMode(false);
@@ -86,7 +87,7 @@ export default function ProductsCatalog() {
 
     if (!prodNome || !prodSetor) return;
     try {
-      addProduct(prodNome, prodSetor);
+      addProduct(correctSpellingAndUppercase(prodNome), correctSpellingAndUppercase(prodSetor));
       setIsAddingProduct(false);
       setProdNome('');
       setProdSetor('');

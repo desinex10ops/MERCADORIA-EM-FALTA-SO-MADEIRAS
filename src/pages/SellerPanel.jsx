@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 
 export default function SellerPanel() {
   const { user } = useAuth();
-  const { products, records, addRecord, markAsArrived, deleteRecord } = useData();
+  const { products, records, addRecord, updateRecordStatus, markAsArrived, deleteRecord, sendFilialRequestToBuyer } = useData();
   
   const [produtoName, setProdutoName] = useState('');
   const [qtdAtual, setQtdAtual] = useState('');
@@ -19,6 +19,7 @@ export default function SellerPanel() {
   
   const fileInputRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('matriz'); // 'matriz' | 'filial'
 
   const smartSearch = (text, search) => {
     if (!search) return true;
@@ -50,6 +51,7 @@ export default function SellerPanel() {
       vendedor_nome: user.nome,
       vendedor_id: user.uid,
       setor: prod ? prod.setor : user.setor, // Fallback to user sector
+      loja: 'Só Madeiras',
       quantidade_atual: qtdAtual ? Number(qtdAtual) : 0,
       quantidade_ideal: qtdIdeal ? Number(qtdIdeal) : null,
       chegou: chegou,
@@ -93,9 +95,9 @@ export default function SellerPanel() {
     }
   };
 
-  // Only show active records (not arrived yet) for the current seller
-  const activeRecords = records.filter(r => r.vendedor_id === user.uid || !r.vendedor_id); // mock uses global for now if no ID, but let's filter by arrived = false
-  const myRecords = records.filter(r => !r.chegou && smartSearch(r.produto_nome, searchTerm));
+  // Matriz & Filial records
+  const myRecords = records.filter(r => ((!r.loja || r.loja === 'Só Madeiras' || r.solicitado_por_filial)) && !r.chegou && smartSearch(r.produto_nome, searchTerm));
+  const filialRecords = records.filter(r => r.loja === 'Ki Madeiras' && !r.chegou && smartSearch(r.produto_nome, searchTerm));
 
   return (
     <Layout>
@@ -107,7 +109,7 @@ export default function SellerPanel() {
             <div style={{ background: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: 'var(--radius-full)'}}>
               <PlusCircle size={24} color="var(--accent-blue)" />
             </div>
-            <h3>Registrar Produto em Falta</h3>
+            <h3>Registrar Produto em Falta (Só Madeiras — Matriz)</h3>
           </div>
 
           <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
@@ -117,11 +119,14 @@ export default function SellerPanel() {
               <input 
                 type="text" 
                 value={produtoName}
-                onChange={(e) => setProdutoName(e.target.value)}
-                placeholder="Ex: Cimento, Prego 17x21..."
+                onChange={(e) => setProdutoName(e.target.value.toUpperCase())}
+                spellCheck={true}
+                lang="pt-BR"
+                placeholder="Ex: CIMENTO, PREGO 17X21..."
                 style={{
                   width: '100%', padding: '0.75rem 1rem', borderRadius: 'var(--radius-sm)', 
-                  background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)'
+                  background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: 'var(--text-primary)',
+                  textTransform: 'uppercase'
                 }}
                 required 
               />
@@ -231,7 +236,7 @@ export default function SellerPanel() {
                     <button 
                       type="button" 
                       onClick={() => setFotoPreview(null)}
-                       style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--status-red)', color: 'var(--text-primary)', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      style={{ position: 'absolute', top: '-8px', right: '-8px', background: 'var(--status-red)', color: 'var(--text-primary)', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       <X size={14} />
                     </button>
@@ -251,79 +256,93 @@ export default function SellerPanel() {
           </form>
         </div>
 
-        {/* My Records List */}
+        {/* Tab Navigation for Matriz vs Filial Requests */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Package size={20} /> Registros Ativos da Loja ({myRecords.length})
-            </h3>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => setActiveTab('matriz')}
+                style={{
+                  padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
+                  background: activeTab === 'matriz' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.05)',
+                  color: activeTab === 'matriz' ? '#fff' : 'var(--text-secondary)'
+                }}
+              >
+                Faltas da Matriz ({myRecords.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('filial')}
+                style={{
+                  padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
+                  background: activeTab === 'filial' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.05)',
+                  color: activeTab === 'filial' ? '#fff' : 'var(--text-secondary)',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem'
+                }}
+              >
+                Solicitações Filial Ki Madeiras ({filialRecords.length})
+                {filialRecords.length > 0 && (
+                  <span style={{ background: 'var(--status-yellow)', color: '#000', borderRadius: '10px', padding: '0.1rem 0.4rem', fontSize: '0.75rem' }}>
+                    {filialRecords.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
             <input 
-                type="text" 
-                placeholder="Buscar produto..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', width: '250px' }}
-              />
+              type="text" 
+              placeholder="Buscar produto..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', width: '250px' }}
+            />
           </div>
           
-          <div style={{ display: 'grid', gap: '1rem' }}>
-            {myRecords.length === 0 ? (
-              <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                Nenhum produto em falta registrado por você no momento.
-              </div>
-            ) : (
-              myRecords.map(record => (
-                <div key={record.id} className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                  
-                  <div style={{ flex: '1 1 250px' }}>
-                    <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {record.produto_nome}
-                      {record.cliente_esperando && (
-                        <span style={{ fontSize: '0.65rem', background: 'var(--status-red)', color: 'var(--text-primary)', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🚨 Cliente Esperando</span>
-                      )}
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                      Solicitado por: <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>{record.vendedor_nome}</span>
-                    </div>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Clock size={14} /> 
-                      Atualizado em {format(parseISO(record.data_atualizacao), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                    </div>
-                  </div>
+          {/* Matriz List */}
+          {activeTab === 'matriz' && (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              {myRecords.length === 0 ? (
+                <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  Nenhum produto em falta na Matriz registrado no momento.
+                </div>
+              ) : (
+                myRecords.map(record => {
+                  const isFilial = record.loja === 'Ki Madeiras' || record.solicitado_por_filial || record.mensagem_filial;
+                  return (
+                    <div key={record.id} className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center', borderLeft: isFilial ? '4px solid var(--status-yellow)' : '1px solid var(--border-color)' }}>
+                      <div style={{ flex: '1 1 250px' }}>
+                        <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          {record.produto_nome}
+                          {record.cliente_esperando && (
+                            <span style={{ fontSize: '0.65rem', background: 'var(--status-red)', color: 'var(--text-primary)', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase' }}>🚨 Cliente Esperando</span>
+                          )}
+                          {isFilial && (
+                            <span style={{ fontSize: '0.65rem', background: 'rgba(245,158,11,0.2)', color: 'var(--status-yellow)', border: '1px solid var(--status-yellow)', padding: '0.2rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>
+                              🏷️ Solicitado por Ki Madeiras ({record.vendedor_nome})
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                          Solicitado por: <span style={{ color: isFilial ? 'var(--status-yellow)' : 'var(--accent-blue)', fontWeight: 'bold' }}>{record.vendedor_nome} {isFilial ? '(Ki Madeiras)' : ''}</span>
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Clock size={14} /> 
+                          Atualizado em {format(parseISO(record.data_atualizacao), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                        </div>
+                      </div>
 
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                    <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Estoque</div>
-                      <div style={{ fontWeight: 'bold' }}>{record.quantidade_atual} / {record.quantidade_ideal}</div>
-                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Estoque</div>
+                        <div style={{ fontWeight: 'bold' }}>{record.quantidade_atual} / {record.quantidade_ideal}</div>
+                      </div>
 
-                    <div className={getUrgencyColor(record.urgencia)} style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)', fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <AlertTriangle size={14} /> {record.urgencia}
-                    </div>
+                      <div className={getUrgencyColor(record.urgencia)} style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)', fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <AlertTriangle size={14} /> {record.urgencia}
+                      </div>
 
-                    {(record.urgencia === 'Alta' || record.cliente_esperando) && (
-                       <a 
-                          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                            record.cliente_esperando 
-                              ? `🚨 *CLIENTE NA LOJA ESPERANDO!*\n\nFala, tudo bem?\nA peça *${record.produto_nome}* acabou e tem cliente no balcão aguardando a reposição ou previsão!\n\n_Enviado via App de Controle_` 
-                              : `⚠️ *FALTA URGENTE!*\n\nFala, tudo bem?\nO estoque de *${record.produto_nome}* zerou por aqui na loja.\n\n_Enviado via App de Controle_`
-                          )}`}
-                          target="_blank" rel="noreferrer"
-                          style={{
-                            background: '#25D366', color: 'var(--text-primary)', textDecoration: 'none',
-                            padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)',
-                            fontSize: '0.85rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.4rem', border: '1px solid #1da851'
-                          }}
-                          title="Avisar no WhatsApp"
-                       >
-                          <MessageCircle size={14} /> Avisar
-                       </a>
-                    )}
-
-                    <div style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)', fontSize: '0.85rem', fontWeight: '600', border: '1px solid var(--border-color)', color: getStatusColor(record.status_compra) }}>
-                      {record.status_compra}
-                    </div>
-                    {record.status_compra === 'Comprou' && (
+                      <div style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)', fontSize: '0.85rem', fontWeight: '600', border: '1px solid var(--border-color)', color: getStatusColor(record.status_compra) }}>
+                        {record.status_compra}
+                      </div>
                       <button 
                         onClick={() => markAsArrived(record.id)}
                         style={{
@@ -332,35 +351,116 @@ export default function SellerPanel() {
                           borderRadius: 'var(--radius-full)', cursor: 'pointer',
                           display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600'
                         }}
-                        title="Confirmar que o produto chegou"
+                        title="Confirmar que o produto chegou na loja"
                       >
                         <PackageCheck size={18} /> Chegou na Loja
                       </button>
-                    )}
 
-                    {record.vendedor_nome === user.nome && (
-                      <button 
-                        onClick={() => {
-                          if (window.confirm('Tem certeza que deseja excluir este registro de falta?')) {
-                            deleteRecord(record.id);
-                          }
-                        }}
-                        style={{
-                          background: 'transparent', color: 'var(--status-red)',
-                          border: 'none', padding: '0.5rem',
-                          cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}
-                        title="Excluir este seu registro"
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    )}
+                      {record.vendedor_nome === user.nome && (
+                        <button 
+                          onClick={() => {
+                            if (window.confirm('Tem certeza que deseja excluir este registro de falta?')) {
+                              deleteRecord(record.id);
+                            }
+                          }}
+                          style={{
+                            background: 'transparent', color: 'var(--status-red)',
+                            border: 'none', padding: '0.5rem',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}
+                          title="Excluir este seu registro"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      )}
+                    </div>
+
                   </div>
+                );
+              })
+              )}
+            </div>
+          )}
 
+          {/* Filial List Section */}
+          {activeTab === 'filial' && (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              {filialRecords.length === 0 ? (
+                <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                  Nenhuma solicitação pendente da filial Ki Madeiras.
                 </div>
-              ))
-            )}
-          </div>
+              ) : (
+                filialRecords.map(record => (
+                  <div key={record.id} className="glass-panel" style={{ padding: '1.5rem', borderLeft: '4px solid var(--status-yellow)' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold', fontSize: '1.15rem', color: '#fff', marginBottom: '0.2rem' }}>
+                          {record.produto_nome}
+                          <span style={{ fontSize: '0.75rem', background: 'rgba(245,158,11,0.2)', color: 'var(--status-yellow)', border: '1px solid var(--status-yellow)', padding: '0.2rem 0.5rem', borderRadius: '12px', marginLeft: '0.5rem' }}>
+                            Solicitado por Ki Madeiras
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                          Solicitante: <strong>{record.vendedor_nome}</strong> • Quantidade solicitada: <strong>{record.quantidade_ideal || 1} un</strong>
+                        </div>
+                      </div>
+
+                      <div style={{ fontSize: '0.85rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)' }}>
+                        Status Atual: <strong style={{ color: 'var(--accent-blue)' }}>{record.status_compra}</strong>
+                      </div>
+                    </div>
+
+                    {/* Action buttons for Matriz seller to triage Filial request */}
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' }}>
+                      <button
+                        onClick={() => updateRecordStatus(record.id, 'Em Separação na Matriz')}
+                        style={{
+                          background: record.status_compra === 'Em Separação na Matriz' ? 'var(--accent-blue)' : 'rgba(59,130,246,0.15)',
+                          color: record.status_compra === 'Em Separação na Matriz' ? '#fff' : 'var(--accent-blue)',
+                          border: '1px solid var(--accent-blue)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flex: '1 1 auto'
+                        }}
+                      >
+                        ✓ Já temos na Matriz (Em Separação)
+                      </button>
+
+                      <button
+                        onClick={() => updateRecordStatus(record.id, 'Aguardando Produto Chegar')}
+                        style={{
+                          background: record.status_compra === 'Aguardando Produto Chegar' ? 'var(--status-yellow)' : 'rgba(245,158,11,0.15)',
+                          color: record.status_compra === 'Aguardando Produto Chegar' ? '#000' : 'var(--status-yellow)',
+                          border: '1px solid var(--status-yellow)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flex: '1 1 auto'
+                        }}
+                      >
+                        ⏳ Aguardando Produto Chegar
+                      </button>
+
+                      <button
+                        onClick={() => sendFilialRequestToBuyer(record.id)}
+                        style={{
+                          background: 'rgba(239,68,68,0.15)', color: 'var(--status-red)',
+                          border: '1px solid var(--status-red)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)',
+                          fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flex: '1 1 auto'
+                        }}
+                      >
+                        ➔ Enviar para Lista de Faltas (Comprador)
+                      </button>
+
+                      {record.status_compra === 'Aguardando Produto Chegar' && (
+                        <button
+                          onClick={() => markAsArrived(record.id)}
+                          style={{ background: 'var(--status-green)', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', fontWeight: 'bold', cursor: 'pointer' }}
+                        >
+                          Confirmar Chegada na Matriz
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
       </div>

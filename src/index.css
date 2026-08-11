@@ -180,3 +180,27 @@ input, button, select, textarea {
     font-size: 1.5rem !important;
   }
 }
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Global Uppercase & Spellcheck Rules */
+input[type="text"],
+input[type="search"],
+textarea,
+select,
+option,
+.uppercase-input {
+  text-transform: uppercase !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  text-transform: uppercase !important;
+}
