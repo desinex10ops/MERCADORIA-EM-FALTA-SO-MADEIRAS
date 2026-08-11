@@ -2,9 +2,10 @@ import React, { useState, useRef } from 'react';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
-import { PlusCircle, Search, AlertTriangle, PackageCheck, Package, Clock, Camera, X, Trash2, MessageCircle } from 'lucide-react';
+import { PlusCircle, Search, AlertTriangle, PackageCheck, Package, Clock, Camera, X, Trash2, MessageCircle, FileCode } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import DanfeModal from '../components/DanfeModal';
 
 export default function SellerPanel() {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ export default function SellerPanel() {
   const fileInputRef = useRef(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('matriz'); // 'matriz' | 'filial'
+  const [showDanfeModal, setShowDanfeModal] = useState(false);
 
   const smartSearch = (text, search) => {
     if (!search) return true;
@@ -288,13 +290,22 @@ export default function SellerPanel() {
               </button>
             </div>
 
-            <input 
-              type="text" 
-              placeholder="Buscar produto..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', width: '250px' }}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setShowDanfeModal(true)}
+                style={{ background: 'var(--status-green)', color: '#fff', padding: '0.55rem 1rem', borderRadius: 'var(--radius-sm)', border: 'none', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
+              >
+                <FileCode size={16} /> ⚡ Baixar Nota Fiscal (DANFE / XML)
+              </button>
+
+              <input 
+                type="text" 
+                placeholder="Buscar produto..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', width: '220px' }}
+              />
+            </div>
           </div>
           
           {/* Matriz List */}
@@ -464,6 +475,8 @@ export default function SellerPanel() {
         </div>
 
       </div>
+
+      <DanfeModal isOpen={showDanfeModal} onClose={() => setShowDanfeModal(false)} />
     </Layout>
   );
 }

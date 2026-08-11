@@ -143,17 +143,8 @@ export default function FilialPanel() {
               </p>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setShowDanfeModal(true)}
-              style={{ background: 'var(--status-green)', color: '#fff', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', border: 'none', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}
-            >
-              <FileCode size={16} /> ⚡ Baixar Nota Fiscal (DANFE / XML)
-            </button>
-
-            <div style={{ background: 'rgba(37,99,235,0.15)', color: 'var(--accent-blue)', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>
-              {user?.role === 'admin_filial' ? 'CARGO: ADMIN KI MADEIRAS' : 'LOJA: KI MADEIRAS'}
-            </div>
+          <div style={{ background: 'rgba(37,99,235,0.15)', color: 'var(--accent-blue)', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 700 }}>
+            {user?.role === 'admin_filial' ? 'CARGO: ADMIN KI MADEIRAS' : 'LOJA: KI MADEIRAS'}
           </div>
         </div>
 
@@ -678,8 +669,6 @@ export default function FilialPanel() {
         </div>
 
       </div>
-
-      <DanfeModal isOpen={showDanfeModal} onClose={() => setShowDanfeModal(false)} />
     </Layout>
   );
 }
