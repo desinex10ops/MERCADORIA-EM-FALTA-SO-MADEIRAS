@@ -21,12 +21,62 @@ export default function FilialPanel() {
   const [activeTab, setActiveTab] = useState('filial'); // 'filial' | 'matriz' | 'compras_diretas'
   const [showDanfeModal, setShowDanfeModal] = useState(false);
 
-  // State for Direct Purchase Form
-  const [directProdName, setDirectProdName] = useState('');
+  // State for Direct Purchase Form (Multi-product support)
   const [directSupplier, setDirectSupplier] = useState('');
-  const [directQty, setDirectQty] = useState('');
-  const [directUnitPrice, setDirectUnitPrice] = useState('');
+  const [directItems, setDirectItems] = useState([
+    { id: 1, produto_nome: '', quantidade: '', valor_unitario: '' }
+  ]);
   const [directSuccessMsg, setDirectSuccessMsg] = useState('');
+
+  const handleAddDirectItem = () => {
+    setDirectItems(prev => [
+      ...prev,
+      { id: Date.now(), produto_nome: '', quantidade: '', valor_unitario: '' }
+    ]);
+  };
+
+  const handleRemoveDirectItem = (id) => {
+    if (directItems.length <= 1) return;
+    setDirectItems(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleItemChange = (id, field, value) => {
+    setDirectItems(prev => prev.map(item => {
+      if (item.id === id) {
+        return { ...item, [field]: value };
+      }
+      return item;
+    }));
+  };
+
+  const handleAddDirectPurchase = (e) => {
+    e.preventDefault();
+    if (!directSupplier.trim()) {
+      alert('Por favor, informe o nome do fornecedor.');
+      return;
+    }
+
+    const validItems = directItems.filter(item => item.produto_nome.trim().length > 0);
+    if (validItems.length === 0) {
+      alert('Por favor, preencha pelo menos um produto.');
+      return;
+    }
+
+    validItems.forEach(item => {
+      addFilialPurchase({
+        produto_nome: item.produto_nome.trim().toUpperCase(),
+        fornecedor: directSupplier.trim().toUpperCase(),
+        quantidade: item.quantidade ? Number(item.quantidade) : 1,
+        valor_unitario: item.valor_unitario ? Number(item.valor_unitario) : 0,
+        comprador_nome: user?.nome || 'ADMIN KI MADEIRAS'
+      });
+    });
+
+    setDirectSuccessMsg(`✅ Compra de ${validItems.length} produto(s) no fornecedor "${directSupplier.toUpperCase()}" registrada com sucesso! Notificação enviada para as Notificações e para o Admin Geral Juliano.`);
+    setDirectSupplier('');
+    setDirectItems([{ id: Date.now(), produto_nome: '', quantidade: '', valor_unitario: '' }]);
+    setTimeout(() => setDirectSuccessMsg(''), 6000);
+  };
 
   // State for Filial Seller Registration (Admin Ki Madeiras)
   const [newSellerUsername, setNewSellerUsername] = useState('');
@@ -88,26 +138,6 @@ export default function FilialPanel() {
     setQtdIdeal('');
     setClienteEsperando(false);
     setFotoPreview(null);
-  };
-
-  const handleAddDirectPurchase = (e) => {
-    e.preventDefault();
-    if (!directProdName.trim()) return;
-
-    addFilialPurchase({
-      produto_nome: directProdName,
-      fornecedor: directSupplier,
-      quantidade: directQty,
-      valor_unitario: directUnitPrice,
-      comprador_nome: user?.nome || 'ADMIN KI MADEIRAS'
-    });
-
-    setDirectSuccessMsg(`✅ Compra de "${directProdName.toUpperCase()}" registrada com sucesso! Notificação enviada para a Central de Notificações e para o Admin Geral Juliano.`);
-    setDirectProdName('');
-    setDirectSupplier('');
-    setDirectQty('');
-    setDirectUnitPrice('');
-    setTimeout(() => setDirectSuccessMsg(''), 6000);
   };
 
   const handleFileChange = (e) => {
@@ -267,19 +297,21 @@ export default function FilialPanel() {
           </div>
         )}
 
-        {/* Lançamento de Compra Direta pelo Admin da Ki Madeiras */}
+        {/* Lançamento de Compra Direta pelo Admin da Ki Madeiras (Múltiplos Produtos) */}
         <div className="glass-panel" style={{ padding: '1.75rem', background: 'linear-gradient(135deg, rgba(37,99,235,0.1) 0%, rgba(30,41,59,0.7) 100%)', border: '1px solid var(--accent-blue)', borderRadius: 'var(--radius-md)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-            <div style={{ background: 'var(--accent-blue)', padding: '0.6rem', borderRadius: '10px', color: '#fff' }}>
-              <ShoppingCart size={22} />
-            </div>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>
-                Lançar Compra Efetuada Direto pela Ki Madeiras
-              </h3>
-              <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                Insira manualmente os produtos comprados diretamente pela filial. O aviso é enviado automaticamente para as Notificações e para a aba do Admin Geral Juliano.
-              </p>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ background: 'var(--accent-blue)', padding: '0.6rem', borderRadius: '10px', color: '#fff' }}>
+                <ShoppingCart size={22} />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>
+                  Lançar Compra Efetuada Direto pela Ki Madeiras (Múltiplos Itens)
+                </h3>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Insira manualmente os produtos comprados. Ao clicar no botão de "+", o fornecedor é mantido automaticamente para todos os itens da compra!
+                </p>
+              </div>
             </div>
           </div>
 
@@ -289,62 +321,106 @@ export default function FilialPanel() {
             </div>
           )}
 
-          <form onSubmit={handleAddDirectPurchase} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', alignItems: 'end' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Produto Comprado</label>
+          <form onSubmit={handleAddDirectPurchase} style={{ display: 'grid', gap: '1.25rem' }}>
+            {/* Fornecedor da Compra (Compartilhado) */}
+            <div style={{ maxWidth: '420px' }}>
+              <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.85rem', color: '#fff', fontWeight: 'bold' }}>
+                🏢 Nome do Fornecedor / Distribuidora *
+              </label>
               <input 
                 type="text"
-                placeholder="EX: TINTAS SUVINIL 18L"
-                value={directProdName}
-                onChange={e => setDirectProdName(e.target.value.toUpperCase())}
-                spellCheck={true}
-                lang="pt-BR"
-                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
-                required
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Fornecedor</label>
-              <input 
-                type="text"
-                placeholder="EX: TINTAS & CIA"
+                placeholder="EX: TINTAS & CIA, ATACADÃO..."
                 value={directSupplier}
                 onChange={e => setDirectSupplier(e.target.value.toUpperCase())}
                 spellCheck={true}
                 lang="pt-BR"
-                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Quantidade Comprada</label>
-              <input 
-                type="number"
-                placeholder="EX: 10"
-                min="1"
-                value={directQty}
-                onChange={e => setDirectQty(e.target.value)}
-                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                style={{ width: '100%', padding: '0.75rem 0.9rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.4)', border: '1px solid var(--accent-blue)', color: '#fff', fontSize: '0.9rem', fontWeight: 'bold' }}
                 required
               />
             </div>
 
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.35rem', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Valor Unitário (R$)</label>
-              <input 
-                type="number"
-                step="0.01"
-                placeholder="EX: 280.00"
-                value={directUnitPrice}
-                onChange={e => setDirectUnitPrice(e.target.value)}
-                style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
-              />
+            {/* Lista Dinâmica de Produtos da Compra */}
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                📦 Produtos desta Compra ({directItems.length} item(ns)):
+              </label>
+
+              {directItems.map((item, idx) => (
+                <div key={item.id} style={{ background: 'rgba(0,0,0,0.25)', padding: '1rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr)) auto', gap: '1rem', alignItems: 'end' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
+                      Produto #{idx + 1} *
+                    </label>
+                    <input 
+                      type="text"
+                      placeholder="EX: TINTAS SUVINIL 18L"
+                      value={item.produto_nome}
+                      onChange={e => handleItemChange(item.id, 'produto_nome', e.target.value.toUpperCase())}
+                      spellCheck={true}
+                      lang="pt-BR"
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
+                      Quantidade
+                    </label>
+                    <input 
+                      type="number"
+                      placeholder="EX: 10"
+                      min="1"
+                      value={item.quantidade}
+                      onChange={e => handleItemChange(item.id, 'quantidade', e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
+                      Valor Unitário (R$)
+                    </label>
+                    <input 
+                      type="number"
+                      step="0.01"
+                      placeholder="EX: 280.00"
+                      value={item.valor_unitario}
+                      onChange={e => handleItemChange(item.id, 'valor_unitario', e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '0.85rem' }}
+                    />
+                  </div>
+
+                  {directItems.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveDirectItem(item.id)}
+                      title="Remover este produto da compra"
+                      style={{ background: 'rgba(239,68,68,0.15)', color: 'var(--status-red)', border: '1px solid var(--status-red)', padding: '0.65rem', borderRadius: 'var(--radius-sm)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
 
-            <div>
-              <button type="submit" style={{ width: '100%', background: 'var(--accent-blue)', color: '#fff', border: 'none', padding: '0.65rem 1rem', borderRadius: 'var(--radius-sm)', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                <Send size={16} /> Registrar Compra Direta
+            {/* Buttons: + Adicionar Produto e Submit */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={handleAddDirectItem}
+                style={{ background: 'rgba(59,130,246,0.15)', color: 'var(--accent-blue)', border: '1px solid var(--accent-blue)', padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-sm)', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}
+              >
+                ➕ Adicionar Outro Produto nesta Compra
+              </button>
+
+              <button
+                type="submit"
+                style={{ background: 'var(--accent-blue)', color: '#fff', border: 'none', padding: '0.75rem 1.75rem', borderRadius: 'var(--radius-sm)', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem' }}
+              >
+                <Send size={16} /> Registrar Compra ({directItems.length} produto{directItems.length > 1 ? 's' : ''})
               </button>
             </div>
           </form>

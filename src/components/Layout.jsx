@@ -118,7 +118,8 @@ export default function Layout({ children }) {
         {/* Top Tab Bar for Navigation */}
         <div style={{ width: '100%', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '1rem', padding: '0 2rem', overflowX: 'auto' }}>
           <NavLink 
-            to="/" 
+            to={user?.role === 'admin_filial' || (user?.role === 'vendedor' && user?.loja === 'Ki Madeiras') ? "/filial-ki-madeiras" : user?.role === 'vendedor' ? "/vendedor" : "/comprador"} 
+            end
             style={({ isActive }) => ({
               padding: '1rem 0', color: isActive ? 'white' : 'var(--text-secondary)', textDecoration: 'none',
               borderBottom: isActive ? '2px solid var(--accent-blue)' : '2px solid transparent',
