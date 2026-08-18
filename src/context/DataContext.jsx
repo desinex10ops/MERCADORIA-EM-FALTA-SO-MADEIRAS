@@ -20,6 +20,47 @@ const normalizeQuote = (q) => ({
   status: q.status || 'Pendente'
 });
 
+const enrichRecordWithStore = (r) => {
+  if (!r) return r;
+  let assignedLoja = r.loja;
+
+  if (!assignedLoja) {
+    const vName = (r.vendedor_nome || '').toUpperCase();
+    const vId = (r.vendedor_id || '').toLowerCase();
+    
+    if (vName.includes('KI MADEIRAS') || vName.includes('FILIAL') || vId.includes('ki') || vId === 'u_vendedor_ki' || vId === 'u_admin_ki' || vId === 'u_raul') {
+      assignedLoja = 'Ki Madeiras';
+    } else {
+      try {
+        const savedUsers = localStorage.getItem('@MercadoriaAuth:users_list');
+        if (savedUsers) {
+          const usersList = JSON.parse(savedUsers);
+          if (Array.isArray(usersList)) {
+            const norm = (s) => (s || '').toLowerCase().trim();
+            const sellerUser = usersList.find(u => 
+              (u.uid && norm(u.uid) === vId) || 
+              (u.username && norm(u.username) === vId) ||
+              (u.nome && norm(u.nome) === norm(r.vendedor_nome))
+            );
+            if (sellerUser && sellerUser.loja) {
+              assignedLoja = sellerUser.loja;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+  }
+
+  if (!assignedLoja) {
+    assignedLoja = 'Só Madeiras';
+  }
+
+  return {
+    ...r,
+    loja: assignedLoja
+  };
+};
+
 const defaultSuppliersList = [
   { id: 'sup_1', nome: 'ATACADÃO MADEIRAS', representante: 'João Silva', telefone: '(79) 99811-2233', email: 'joao@atacadaomadeiras.com.br', ultimaCotacao: new Date().toISOString(), totalCotacoes: 5 },
   { id: 'sup_2', nome: 'DISTRIBUIDORA ESTÂNCIA', representante: 'Carlos Eduardo', telefone: '(79) 99122-4455', email: 'carlos@estancia.com.br', ultimaCotacao: new Date().toISOString(), totalCotacoes: 3 },
@@ -29,7 +70,18 @@ const defaultSuppliersList = [
 ];
 
 export const DataProvider = ({ children }) => {
-  const [records, setRecords] = useState([]);
+  const [records, setRecords] = useState(() => {
+    const storedRecords = localStorage.getItem('@MercadoriaData:records');
+    if (storedRecords) {
+      try {
+        const parsed = JSON.parse(storedRecords);
+        if (Array.isArray(parsed)) {
+          return parsed.map(enrichRecordWithStore);
+        }
+      } catch {}
+    }
+    return [];
+  });
   const [purchases, setPurchases] = useState([]);
   const [products, setProducts] = useState([]);
   const [deletedSupplierIds, setDeletedSupplierIds] = useState(() => {
@@ -107,8 +159,23 @@ export const DataProvider = ({ children }) => {
           supabase.from('supplier_quotes').select('*').order('created_at', { ascending: false })
         ]);
         if (localRecords) {
-          setRecords(localRecords);
-          localStorage.setItem('@MercadoriaData:records', JSON.stringify(localRecords));
+          setRecords(prev => {
+            const enrichedDbRecords = localRecords.map(dbItem => {
+              const localMatch = prev.find(p => p.id === dbItem.id);
+              const base = localMatch ? { ...localMatch, ...dbItem } : dbItem;
+              return enrichRecordWithStore(base);
+            });
+
+            const merged = [...enrichedDbRecords];
+            prev.forEach(localItem => {
+              const enrichedLocal = enrichRecordWithStore(localItem);
+              if (!merged.some(dbItem => dbItem.id === enrichedLocal.id || (dbItem.produto_nome === enrichedLocal.produto_nome && dbItem.vendedor_nome === enrichedLocal.vendedor_nome && dbItem.data_criacao === enrichedLocal.data_criacao))) {
+                merged.push(enrichedLocal);
+              }
+            });
+            localStorage.setItem('@MercadoriaData:records', JSON.stringify(merged));
+            return merged;
+          });
         }
         if (localProducts) setProducts(localProducts);
         if (localSuppliers) {
@@ -178,6 +245,18 @@ export const DataProvider = ({ children }) => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const saveRecords = (updateFn) => {
+    setRecords(prev => {
+      const nextRecords = typeof updateFn === 'function' ? updateFn(prev) : updateFn;
+      try {
+        localStorage.setItem('@MercadoriaData:records', JSON.stringify(nextRecords));
+      } catch (e) {
+        console.warn('Error saving records to localStorage:', e);
+      }
+      return nextRecords;
+    });
+  };
 
   const savePurchases = (newPurchases) => {
     setPurchases(newPurchases);
@@ -315,6 +394,37 @@ export const DataProvider = ({ children }) => {
     return 'Baixa';
   };
 
+  const ALLOWED_DB_COLUMNS = [
+    'id',
+    'produto_nome',
+    'vendedor_nome',
+    'vendedor_id',
+    'setor',
+    'quantidade_atual',
+    'quantidade_ideal',
+    'chegou',
+    'cliente_esperando',
+    'foto',
+    'urgencia',
+    'status_compra',
+    'data_criacao',
+    'data_atualizacao',
+    'comprador_nome'
+  ];
+
+  const sanitizeDbRecord = (record) => {
+    const sanitized = {};
+    ALLOWED_DB_COLUMNS.forEach(key => {
+      if (record[key] !== undefined && record[key] !== null) {
+        sanitized[key] = record[key];
+      }
+    });
+    if (!sanitized.vendedor_id) {
+      sanitized.vendedor_id = record.vendedor_id || 'u_vendedor_sistema';
+    }
+    return sanitized;
+  };
+
   const addRecord = async (record) => {
     const formattedProductName = correctSpellingAndUppercase(record.produto_nome);
     const formattedSetor = correctSpellingAndUppercase(record.setor || 'Geral');
@@ -340,6 +450,7 @@ export const DataProvider = ({ children }) => {
     const newRecord = {
       id: recordFormatted.id || uuidv4(),
       ...recordFormatted,
+      vendedor_id: recordFormatted.vendedor_id || 'u_vendedor_sistema',
       loja: recordFormatted.loja || 'Só Madeiras',
       urgencia: urgency,
       status_compra: recordFormatted.status_compra || 'Pendente',
@@ -347,44 +458,51 @@ export const DataProvider = ({ children }) => {
       data_criacao: new Date().toISOString(),
       data_atualizacao: new Date().toISOString(),
     };
-    
-    setRecords(prev => [newRecord, ...prev.filter(r => r.id !== newRecord.id)]);
+
+    // Save immediately to React state AND localStorage so it is 100% persistent!
+    saveRecords(prev => [newRecord, ...prev.filter(r => r.id !== newRecord.id)]);
 
     try {
-      const dbInsert = { ...newRecord };
-      delete dbInsert.id; // Let Supabase insert UUID if column is UUID, or keep if text
-      const { data: insertedData } = await supabase.from('records').insert([dbInsert]).select();
-      if (insertedData && insertedData.length > 0) {
-        setRecords(prev => [insertedData[0], ...prev.filter(r => r.id !== newRecord.id)]);
+      const dbInsert = sanitizeDbRecord(newRecord);
+      delete dbInsert.id; // Let database assign ID or handle primary key
+      const { data: insertedData, error } = await supabase.from('records').insert([dbInsert]).select();
+      if (error) {
+        console.warn('Supabase insert warning (record saved locally):', error);
+      } else if (insertedData && insertedData.length > 0) {
+        const fullRecord = { ...newRecord, ...insertedData[0] };
+        saveRecords(prev => [fullRecord, ...prev.filter(r => r.id !== newRecord.id && r.id !== insertedData[0].id)]);
       }
     } catch (e) {
-      console.warn('Saved record locally:', e);
+      console.warn('Saved record locally (Supabase exception):', e);
     }
   };
 
   const updateRecordStatus = async (id, newStatus) => {
-    setRecords(prev => prev.map(r => r.id === id ? { ...r, status_compra: newStatus, data_atualizacao: new Date().toISOString() } : r));
+    saveRecords(prev => prev.map(r => r.id === id ? { ...r, status_compra: newStatus, data_atualizacao: new Date().toISOString() } : r));
     try {
-      await supabase.from('records').update({ status_compra: newStatus, data_atualizacao: new Date().toISOString() }).eq('id', id);
+      const { error } = await supabase.from('records').update({ status_compra: newStatus, data_atualizacao: new Date().toISOString() }).eq('id', id);
+      if (error) console.warn('Supabase update status warning:', error);
     } catch (e) {}
   };
 
   const markAsArrived = async (id) => {
-    setRecords(prev => prev.map(r => r.id === id ? { ...r, chegou: true, data_atualizacao: new Date().toISOString() } : r));
+    saveRecords(prev => prev.map(r => r.id === id ? { ...r, chegou: true, data_atualizacao: new Date().toISOString() } : r));
     try {
-      await supabase.from('records').update({ chegou: true, data_atualizacao: new Date().toISOString() }).eq('id', id);
+      const { error } = await supabase.from('records').update({ chegou: true, data_atualizacao: new Date().toISOString() }).eq('id', id);
+      if (error) console.warn('Supabase mark arrived warning:', error);
     } catch (e) {}
   };
 
   const deleteRecord = async (id) => {
-    setRecords(prev => prev.filter(r => r.id !== id));
+    saveRecords(prev => prev.filter(r => r.id !== id));
     try {
-      await supabase.from('records').delete().eq('id', id);
+      const { error } = await supabase.from('records').delete().eq('id', id);
+      if (error) console.warn('Supabase delete record warning:', error);
     } catch (e) {}
   };
 
   const sendFilialRequestToBuyer = async (id) => {
-    setRecords(prev => prev.map(r => r.id === id ? {
+    saveRecords(prev => prev.map(r => r.id === id ? {
       ...r,
       solicitado_por_filial: true,
       mensagem_filial: 'Solicitado por Ki Madeiras',
@@ -392,12 +510,13 @@ export const DataProvider = ({ children }) => {
       data_atualizacao: new Date().toISOString()
     } : r));
     try {
-      await supabase.from('records').update({
+      const { error } = await supabase.from('records').update({
         solicitado_por_filial: true,
         mensagem_filial: 'Solicitado por Ki Madeiras',
         status_compra: 'Pendente',
         data_atualizacao: new Date().toISOString()
       }).eq('id', id);
+      if (error) console.warn('Supabase sendFilialRequest warning:', error);
     } catch (e) {}
   };
 
@@ -443,7 +562,7 @@ export const DataProvider = ({ children }) => {
       };
     }
 
-    setRecords(prev => prev.map(r => r.id === recordId ? {
+    saveRecords(prev => prev.map(r => r.id === recordId ? {
       ...r,
       chegou: false,
       status_compra: 'Pendente',
@@ -664,8 +783,7 @@ export const DataProvider = ({ children }) => {
     };
 
     const updatedRecords = [notifRecord, ...records];
-    setRecords(updatedRecords);
-    localStorage.setItem('@MercadoriaData:records', JSON.stringify(updatedRecords));
+    saveRecords(updatedRecords);
 
     return newFilialPurchase;
   };

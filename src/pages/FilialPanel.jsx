@@ -122,7 +122,7 @@ export default function FilialPanel() {
     addRecord({
       produto_nome: produtoName.trim().toUpperCase(),
       vendedor_nome: user?.nome || 'VENDEDOR KI MADEIRAS',
-      vendedor_id: user?.uid,
+      vendedor_id: user?.uid || 'u_vendedor_ki',
       setor: prod ? prod.setor : user?.setor || 'GERAL',
       loja: 'Ki Madeiras',
       quantidade_atual: qtdAtual ? Number(qtdAtual) : 0,
@@ -150,10 +150,10 @@ export default function FilialPanel() {
   };
 
   // Records for Ki Madeiras
-  const filialRecords = records.filter(r => (r.loja === 'Ki Madeiras' || r.vendedor_nome?.includes('Ki Madeiras')) && (!searchTerm || r.produto_nome.toLowerCase().includes(searchTerm.toLowerCase())));
+  const filialRecords = records.filter(r => (r.loja === 'Ki Madeiras' || r.vendedor_nome?.toUpperCase().includes('KI MADEIRAS') || r.solicitado_por_filial) && (!searchTerm || r.produto_nome.toLowerCase().includes(searchTerm.toLowerCase())));
 
   // Records for Matriz (Só Madeiras) - Read-only for Filial
-  const matrizRecords = records.filter(r => (!r.loja || r.loja === 'Só Madeiras') && !r.chegou && (!searchTerm || r.produto_nome.toLowerCase().includes(searchTerm.toLowerCase())));
+  const matrizRecords = records.filter(r => (r.loja !== 'Ki Madeiras' && !r.vendedor_nome?.toUpperCase().includes('KI MADEIRAS') && !r.solicitado_por_filial) && !r.chegou && (!searchTerm || r.produto_nome.toLowerCase().includes(searchTerm.toLowerCase())));
 
   // Sellers of Ki Madeiras ONLY (Filtered strictly)
   const filialSellers = (usersInfo || []).filter(u => u.loja === 'Ki Madeiras' && u.role === 'vendedor');

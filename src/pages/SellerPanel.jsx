@@ -50,9 +50,9 @@ export default function SellerPanel() {
     
     addRecord({
       produto_nome: produtoName.trim(),
-      vendedor_nome: user.nome,
-      vendedor_id: user.uid,
-      setor: prod ? prod.setor : user.setor, // Fallback to user sector
+      vendedor_nome: user?.nome || 'Vendedor Matriz',
+      vendedor_id: user?.uid || 'u_vendedor_matriz',
+      setor: prod ? prod.setor : user?.setor || 'Balcão', // Fallback to user sector
       loja: 'Só Madeiras',
       quantidade_atual: qtdAtual ? Number(qtdAtual) : 0,
       quantidade_ideal: qtdIdeal ? Number(qtdIdeal) : null,
@@ -98,8 +98,8 @@ export default function SellerPanel() {
   };
 
   // Matriz & Filial records
-  const myRecords = records.filter(r => ((!r.loja || r.loja === 'Só Madeiras' || r.solicitado_por_filial)) && !r.chegou && smartSearch(r.produto_nome, searchTerm));
-  const filialRecords = records.filter(r => r.loja === 'Ki Madeiras' && !r.chegou && smartSearch(r.produto_nome, searchTerm));
+  const myRecords = records.filter(r => (r.loja !== 'Ki Madeiras' || r.solicitado_por_filial) && !r.chegou && smartSearch(r.produto_nome, searchTerm));
+  const filialRecords = records.filter(r => (r.loja === 'Ki Madeiras' || r.vendedor_nome?.toUpperCase().includes('KI MADEIRAS') || r.solicitado_por_filial) && !r.chegou && smartSearch(r.produto_nome, searchTerm));
 
   return (
     <Layout>
