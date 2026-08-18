@@ -9,7 +9,7 @@ import DanfeModal from '../components/DanfeModal';
 
 export default function SellerPanel() {
   const { user } = useAuth();
-  const { products, records, addRecord, updateRecordStatus, markAsArrived, deleteRecord, sendFilialRequestToBuyer } = useData();
+  const { products, records, addRecord, updateRecordStatus, markAsArrived, deleteRecord } = useData();
   
   const [produtoName, setProdutoName] = useState('');
   const [qtdAtual, setQtdAtual] = useState('');

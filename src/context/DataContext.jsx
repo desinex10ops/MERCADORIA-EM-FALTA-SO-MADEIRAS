@@ -730,6 +730,32 @@ export const DataProvider = ({ children }) => {
     localStorage.removeItem('@MercadoriaData:supplier_quotes');
   };
 
+  const markNotificationAsRead = (id) => {
+    setReadNotificationIds(prev => {
+      if (prev.includes(id)) return prev;
+      const updated = [...prev, id];
+      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const markAllNotificationsAsRead = (ids = []) => {
+    setReadNotificationIds(prev => {
+      const set = new Set([...prev, ...ids]);
+      const updated = Array.from(set);
+      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const toggleNotificationRead = (id) => {
+    setReadNotificationIds(prev => {
+      const updated = prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id];
+      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
     <DataContext.Provider value={{ 
       records, 
