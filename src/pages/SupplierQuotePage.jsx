@@ -7,7 +7,7 @@ export default function SupplierQuotePage() {
   const [searchParams] = useSearchParams();
   const { records, submitSupplierQuote, loading } = useData();
 
-  const storeName = searchParams.get('store') || 'SÓ MADEIRAS';
+  const storeName = searchParams.get('store') || 'Controle de Faltas';
   const itemIds = searchParams.get('items') ? searchParams.get('items').split(',') : [];
   const quoteLinkId = searchParams.get('id') || 'quote_' + Date.now();
 
@@ -132,7 +132,7 @@ export default function SupplierQuotePage() {
               Carregando Cotação...
             </h3>
             <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.85rem', lineHeight: 1.5 }}>
-              Buscando a lista de produtos solicitados pela loja <strong>{storeName}</strong>.
+              Buscando a lista de produtos solicitados.
             </p>
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function SupplierQuotePage() {
             Cotação Enviada com Sucesso!
           </h2>
           <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-            Obrigado, <strong>{supplierName}</strong>! Sua proposta de preços foi transmitida diretamente para o setor de compras de <strong>{storeName}</strong>.
+            Obrigado, <strong>{supplierName}</strong>! Sua proposta de preços foi transmitida diretamente para o setor de compras.
           </p>
           <div style={{ padding: '0.75rem', background: 'rgba(16,185,129,0.15)', color: 'var(--status-green, #34d399)', borderRadius: '8px', fontSize: '0.85rem', fontWeight: '600' }}>
             ✓ O comprador analisará os valores e separará o pedido pelo mais em conta!
@@ -169,7 +169,7 @@ export default function SupplierQuotePage() {
             <Hexagon size={16} /> PORTAL DE COTAÇÃO PARA REPRESENTANTES & FORNECEDORES
           </div>
           <h1 style={{ fontSize: '2rem', fontWeight: 800, color: '#fff', marginBottom: '0.5rem' }}>
-            Solicitação de Cotação — {storeName}
+            Solicitação de Cotação de Preços
           </h1>
           <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.9rem' }}>
             Preencha seus valores unitários ou marque "Não tenho o produto" caso esteja em falta no seu estoque.

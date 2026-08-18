@@ -64,7 +64,7 @@ export default function ProductsCatalog() {
     setEditingProduct(null);
   };
 
-  const handleCreateProduct = (e) => {
+  const handleCreateProduct = async (e) => {
     e.preventDefault();
     setProdError('');
 
@@ -74,7 +74,7 @@ export default function ProductsCatalog() {
         return;
       }
       const lines = bulkText.split('\n').map(l => correctSpellingAndUppercase(l));
-      const count = addProductsBulk(lines, correctSpellingAndUppercase(prodSetor || 'Geral'));
+      const count = await addProductsBulk(lines, correctSpellingAndUppercase(prodSetor || 'Geral'));
       alert(`${count} produto(s) cadastrado(s) com sucesso em MAIÚSCULAS!`);
       
       setIsAddingProduct(false);
@@ -87,7 +87,7 @@ export default function ProductsCatalog() {
 
     if (!prodNome || !prodSetor) return;
     try {
-      addProduct(correctSpellingAndUppercase(prodNome), correctSpellingAndUppercase(prodSetor));
+      await addProduct(correctSpellingAndUppercase(prodNome), correctSpellingAndUppercase(prodSetor));
       setIsAddingProduct(false);
       setProdNome('');
       setProdSetor('');

@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import DanfeModal from '../components/DanfeModal';
 
 export default function BuyerDashboard() {
-  const { records, purchases, suppliers, supplierQuotes, filialPurchases, approveCheapestQuotes, economyHistory, updateRecordStatus, markAsArrived, getProductPriceStats, getProductPriceHistory, addPurchase, addRecord, addMultipleSupplierQuotes, clearSupplierQuotes } = useData();
+  const { records, purchases, suppliers, supplierQuotes, approveCheapestQuotes, economyHistory, updateRecordStatus, markAsArrived, getProductPriceStats, getProductPriceHistory, addPurchase, addRecord, addMultipleSupplierQuotes, clearSupplierQuotes } = useData();
   const { user, users, registerUser, deleteUser } = useAuth();
   
   const [filterStatus, setFilterStatus] = useState('Todos');
@@ -159,7 +159,7 @@ export default function BuyerDashboard() {
     );
   };
 
-  const selectableRecords = filteredRecords.filter(r => !r.chegou && r.status_compra !== 'Comprou' && r.status_compra !== 'Comprado' && r.status_compra !== 'Comprado Direto por Admin Ki Madeiras');
+  const selectableRecords = filteredRecords.filter(r => !r.chegou && r.status_compra !== 'Comprou' && r.status_compra !== 'Comprado');
 
   const toggleSelectAll = () => {
     if (selectedItemIds.length >= selectableRecords.length && selectableRecords.length > 0) {
@@ -175,7 +175,7 @@ export default function BuyerDashboard() {
       alert('Nenhum item pendente para cotar.');
       return;
     }
-    const url = `${window.location.origin}/cotacao-fornecedor?items=${idsToQuote.join(',')}&store=Só Madeiras`;
+    const url = `${window.location.origin}/cotacao-fornecedor?items=${idsToQuote.join(',')}`;
     setGeneratedQuoteUrl(url);
     setShowQuoteModal(true);
   };
@@ -395,7 +395,7 @@ export default function BuyerDashboard() {
       }
     });
 
-    let msg = `Olá! Aprovamos o pedido de compra para a loja *Só Madeiras*!\n\n*Produtos e Quantidades Aprovadas:*\n`;
+    let msg = `Olá! Aprovamos o pedido de compra!\n\n*Produtos e Quantidades Aprovadas:*\n`;
     let totalAmt = 0;
     approvalModalData.items.forEach((it, i) => {
       const itemSub = Number(it.price) * Number(it.quantity);
@@ -509,23 +509,6 @@ export default function BuyerDashboard() {
               </span>
             )}
           </button>
-
-          <button
-            onClick={() => setMainTab('filial_purchases')}
-            style={{
-              padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.95rem',
-              background: mainTab === 'filial_purchases' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.05)',
-              color: mainTab === 'filial_purchases' ? '#fff' : 'var(--text-secondary)',
-              display: 'flex', alignItems: 'center', gap: '0.5rem'
-            }}
-          >
-            🛒 Pedidos Comprados pelo Admin Ki Madeiras
-            {(filialPurchases || []).length > 0 && (
-              <span style={{ background: 'var(--accent-blue)', color: '#fff', borderRadius: '12px', padding: '0.1rem 0.5rem', fontSize: '0.75rem' }}>
-                {(filialPurchases || []).length}
-              </span>
-            )}
-          </button>
         </div>
 
         {/* Tab 1: Replenishment Queue */}
@@ -628,9 +611,8 @@ export default function BuyerDashboard() {
                     </tr>
                   ) : (
                     filteredRecords.map(record => {
-                      const daysWaiting = differenceInDays(new Date(), parseISO(record.data_criacao));
+                      const daysWaiting = record.data_criacao ? (() => { try { const p = parseISO(record.data_criacao); return isNaN(p.getTime()) ? 0 : Math.max(0, differenceInDays(new Date(), p)); } catch { return 0; } })() : 0;
                       const stats = getProductPriceStats(record.produto_nome);
-                      const isFilial = record.loja === 'Ki Madeiras' || record.solicitado_por_filial || record.mensagem_filial;
                       const isSelected = selectedItemIds.includes(record.id);
 
                       return (
@@ -658,11 +640,6 @@ export default function BuyerDashboard() {
                                   {record.produto_nome}
                                   {record.cliente_esperando && (
                                     <span style={{ fontSize: '0.65rem', background: 'var(--status-red)', color: 'var(--text-primary)', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🚨 Cliente Esperando</span>
-                                  )}
-                                  {isFilial && (
-                                    <span style={{ fontSize: '0.65rem', background: 'rgba(245,158,11,0.2)', color: 'var(--status-yellow)', border: '1px solid var(--status-yellow)', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>
-                                      🏷️ Solicitado por Ki Madeiras
-                                    </span>
                                   )}
                                   <button
                                     onClick={() => setPriceHistoryProduct(record.produto_nome)}
@@ -1056,60 +1033,7 @@ export default function BuyerDashboard() {
           </div>
         )}
 
-        {/* Tab 3: Filial Admin Direct Purchases */}
-        {mainTab === 'filial_purchases' && (
-          <div className="glass-panel" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-              <div>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0, color: '#fff' }}>
-                  <Building2 size={22} color="var(--accent-blue)" /> Pedidos Comprados Direto pelo Admin da Ki Madeiras
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                  Relatório e acompanhamento dos produtos e insumos comprados diretamente pela gestão da filial Ki Madeiras.
-                </p>
-              </div>
-            </div>
 
-            {(filialPurchases || []).length === 0 ? (
-              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                Nenhuma compra direta registrada pelo Admin da Ki Madeiras até o momento.
-              </div>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', textAlign: 'left' }}>
-                      <th style={{ padding: '0.75rem' }}>Data</th>
-                      <th style={{ padding: '0.75rem' }}>Produto Comprado</th>
-                      <th style={{ padding: '0.75rem' }}>Fornecedor</th>
-                      <th style={{ padding: '0.75rem' }}>Comprador (Admin Ki Madeiras)</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'center' }}>Qtd</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right' }}>Valor Unit.</th>
-                      <th style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--status-green)' }}>Total Pago (R$)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(filialPurchases || []).map(fp => (
-                      <tr key={fp.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                        <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>
-                          {format(parseISO(fp.data_compra), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                        </td>
-                        <td style={{ padding: '0.75rem', fontWeight: 'bold', color: '#fff' }}>{fp.produto_nome}</td>
-                        <td style={{ padding: '0.75rem', color: 'var(--accent-blue)', fontWeight: 600 }}>{fp.fornecedor}</td>
-                        <td style={{ padding: '0.75rem', color: '#fff' }}>{fp.comprador_nome}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'center', fontWeight: 'bold' }}>{fp.quantidade} un</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right' }}>R$ {(fp.valor_unitario || 0).toFixed(2)}</td>
-                        <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 800, color: 'var(--status-green)' }}>
-                          R$ {(fp.valor_total || 0).toFixed(2)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
 
 
 
@@ -1252,15 +1176,20 @@ export default function BuyerDashboard() {
                       </tr>
                     </thead>
                     <tbody>
-                      {history.map((p, i) => (
-                        <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                          <td style={{ padding: '0.6rem 0.5rem', color: 'var(--text-secondary)' }}>{format(parseISO(p.data_compra), "dd/MM/yy HH:mm", { locale: ptBR })}</td>
-                          <td style={{ padding: '0.6rem 0.5rem', fontWeight: '500' }}>{p.fornecedor}</td>
-                          <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center' }}>{p.quantidade}</td>
-                          <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right', color: 'var(--status-green)', fontWeight: '600' }}>R$ {p.valor_unitario.toFixed(2)}</td>
-                          <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>R$ {p.valor_total.toFixed(2)}</td>
-                        </tr>
-                      ))}
+                      {history.map((p, i) => {
+                        const dateFormatted = p.data_compra ? (() => { try { const parsed = parseISO(p.data_compra); return isNaN(parsed.getTime()) ? 'Data recente' : format(parsed, "dd/MM/yy HH:mm", { locale: ptBR }); } catch { return 'Data recente'; } })() : 'Data recente';
+                        const unitVal = (Number(p.valor_unitario) || 0).toFixed(2);
+                        const totalVal = (Number(p.valor_total) || 0).toFixed(2);
+                        return (
+                          <tr key={p.id || i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
+                            <td style={{ padding: '0.6rem 0.5rem', color: 'var(--text-secondary)' }}>{dateFormatted}</td>
+                            <td style={{ padding: '0.6rem 0.5rem', fontWeight: '500' }}>{p.fornecedor}</td>
+                            <td style={{ padding: '0.6rem 0.5rem', textAlign: 'center' }}>{p.quantidade}</td>
+                            <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right', color: 'var(--status-green)', fontWeight: '600' }}>R$ {unitVal}</td>
+                            <td style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>R$ {totalVal}</td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 )}
@@ -1489,7 +1418,7 @@ export default function BuyerDashboard() {
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
               <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Olá, tudo bem?\n\nSegue o link para cotar os valores dos produtos pendentes na loja *Só Madeiras*:\n\n${generatedQuoteUrl}\n\nPor favor, preencha seus preços unitários diretamente pelo link acima!`)}`}
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Olá, tudo bem?\n\nSegue o link para cotar os valores dos produtos pendentes:\n\n${generatedQuoteUrl}\n\nPor favor, preencha seus preços unitários diretamente pelo link acima!`)}`}
                 target="_blank" rel="noreferrer"
                 style={{ background: '#25D366', color: '#fff', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: 'bold', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               >

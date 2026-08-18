@@ -98,8 +98,7 @@ export default function SellerPanel() {
   };
 
   // Matriz & Filial records
-  const myRecords = records.filter(r => (r.loja !== 'Ki Madeiras' || r.solicitado_por_filial) && !r.chegou && smartSearch(r.produto_nome, searchTerm));
-  const filialRecords = records.filter(r => (r.loja === 'Ki Madeiras' || r.vendedor_nome?.toUpperCase().includes('KI MADEIRAS') || r.solicitado_por_filial) && !r.chegou && smartSearch(r.produto_nome, searchTerm));
+  const myRecords = records.filter(r => !r.chegou && smartSearch(r.produto_nome, searchTerm));
 
   return (
     <Layout>
@@ -111,7 +110,7 @@ export default function SellerPanel() {
             <div style={{ background: 'var(--bg-secondary)', padding: '0.5rem', borderRadius: 'var(--radius-full)'}}>
               <PlusCircle size={24} color="var(--accent-blue)" />
             </div>
-            <h3>Registrar Produto em Falta (Só Madeiras — Matriz)</h3>
+            <h3>Registrar Produto em Falta</h3>
           </div>
 
           <form onSubmit={handleAdd} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
@@ -258,37 +257,10 @@ export default function SellerPanel() {
           </form>
         </div>
 
-        {/* Tab Navigation for Matriz vs Filial Requests */}
+        {/* Section: Active Missing Products */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={() => setActiveTab('matriz')}
-                style={{
-                  padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
-                  background: activeTab === 'matriz' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.05)',
-                  color: activeTab === 'matriz' ? '#fff' : 'var(--text-secondary)'
-                }}
-              >
-                Faltas da Matriz ({myRecords.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('filial')}
-                style={{
-                  padding: '0.65rem 1.25rem', borderRadius: 'var(--radius-sm)', border: 'none', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.9rem',
-                  background: activeTab === 'filial' ? 'var(--accent-blue)' : 'rgba(255,255,255,0.05)',
-                  color: activeTab === 'filial' ? '#fff' : 'var(--text-secondary)',
-                  display: 'flex', alignItems: 'center', gap: '0.5rem'
-                }}
-              >
-                Solicitações Filial Ki Madeiras ({filialRecords.length})
-                {filialRecords.length > 0 && (
-                  <span style={{ background: 'var(--status-yellow)', color: '#000', borderRadius: '10px', padding: '0.1rem 0.4rem', fontSize: '0.75rem' }}>
-                    {filialRecords.length}
-                  </span>
-                )}
-              </button>
-            </div>
+            <h3 style={{ margin: 0 }}>Produtos em Falta ({myRecords.length})</h3>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
@@ -309,169 +281,78 @@ export default function SellerPanel() {
           </div>
           
           {/* Matriz List */}
-          {activeTab === 'matriz' && (
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              {myRecords.length === 0 ? (
-                <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                  Nenhum produto em falta na Matriz registrado no momento.
-                </div>
-              ) : (
-                myRecords.map(record => {
-                  const isFilial = record.loja === 'Ki Madeiras' || record.solicitado_por_filial || record.mensagem_filial;
-                  return (
-                    <div key={record.id} className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center', borderLeft: isFilial ? '4px solid var(--status-yellow)' : '1px solid var(--border-color)' }}>
-                      <div style={{ flex: '1 1 250px' }}>
-                        <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                          {record.produto_nome}
-                          {record.cliente_esperando && (
-                            <span style={{ fontSize: '0.65rem', background: 'var(--status-red)', color: 'var(--text-primary)', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase' }}>🚨 Cliente Esperando</span>
-                          )}
-                          {isFilial && (
-                            <span style={{ fontSize: '0.65rem', background: 'rgba(245,158,11,0.2)', color: 'var(--status-yellow)', border: '1px solid var(--status-yellow)', padding: '0.2rem 0.5rem', borderRadius: '4px', textTransform: 'uppercase', fontWeight: 700 }}>
-                              🏷️ Solicitado por Ki Madeiras ({record.vendedor_nome})
-                            </span>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
-                          Solicitado por: <span style={{ color: isFilial ? 'var(--status-yellow)' : 'var(--accent-blue)', fontWeight: 'bold' }}>{record.vendedor_nome} {isFilial ? '(Ki Madeiras)' : ''}</span>
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <Clock size={14} /> 
-                          Atualizado em {format(parseISO(record.data_atualizacao), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                        </div>
-                      </div>
-
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                      <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Estoque</div>
-                        <div style={{ fontWeight: 'bold' }}>{record.quantidade_atual} / {record.quantidade_ideal}</div>
-                      </div>
-
-                      <div className={getUrgencyColor(record.urgencia)} style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)', fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        <AlertTriangle size={14} /> {record.urgencia}
-                      </div>
-
-                      <div style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)', fontSize: '0.85rem', fontWeight: '600', border: '1px solid var(--border-color)', color: getStatusColor(record.status_compra) }}>
-                        {record.status_compra}
-                      </div>
-                      <button 
-                        onClick={() => markAsArrived(record.id)}
-                        style={{
-                          background: 'rgba(16, 185, 129, 0.2)', color: 'var(--status-green)',
-                          border: '1px solid var(--status-green)', padding: '0.5rem',
-                          borderRadius: 'var(--radius-full)', cursor: 'pointer',
-                          display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600'
-                        }}
-                        title="Confirmar que o produto chegou na loja"
-                      >
-                        <PackageCheck size={18} /> Chegou na Loja
-                      </button>
-
-                      {record.vendedor_nome === user.nome && (
-                        <button 
-                          onClick={() => {
-                            if (window.confirm('Tem certeza que deseja excluir este registro de falta?')) {
-                              deleteRecord(record.id);
-                            }
-                          }}
-                          style={{
-                            background: 'transparent', color: 'var(--status-red)',
-                            border: 'none', padding: '0.5rem',
-                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                          }}
-                          title="Excluir este seu registro"
-                        >
-                          <Trash2 size={20} />
-                        </button>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {myRecords.length === 0 ? (
+              <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                Nenhum produto em falta registrado no momento.
+              </div>
+            ) : (
+              myRecords.map(record => (
+                <div key={record.id} className="glass-panel" style={{ padding: '1.5rem', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ flex: '1 1 250px' }}>
+                    <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      {record.produto_nome}
+                      {record.cliente_esperando && (
+                        <span style={{ fontSize: '0.65rem', background: 'var(--status-red)', color: 'var(--text-primary)', padding: '0.2rem 0.4rem', borderRadius: '4px', textTransform: 'uppercase' }}>🚨 Cliente Esperando</span>
                       )}
                     </div>
-
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>
+                      Solicitado por: <span style={{ color: 'var(--accent-blue)', fontWeight: 'bold' }}>{record.vendedor_nome}</span>
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Clock size={14} /> 
+                      Atualizado em {record.data_atualizacao ? (() => { try { const parsed = parseISO(record.data_atualizacao); return isNaN(parsed.getTime()) ? 'recente' : format(parsed, "dd/MM 'às' HH:mm", { locale: ptBR }); } catch { return 'recente'; } })() : 'recente'}
+                    </div>
                   </div>
-                );
-              })
-              )}
-            </div>
-          )}
 
-          {/* Filial List Section */}
-          {activeTab === 'filial' && (
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              {filialRecords.length === 0 ? (
-                <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                  Nenhuma solicitação pendente da filial Ki Madeiras.
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: 'var(--radius-sm)' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Estoque</div>
+                      <div style={{ fontWeight: 'bold' }}>{record.quantidade_atual} / {record.quantidade_ideal || '—'}</div>
+                    </div>
+
+                    <div className={getUrgencyColor(record.urgencia)} style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)', fontSize: '0.85rem', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <AlertTriangle size={14} /> {record.urgencia}
+                    </div>
+
+                    <div style={{ padding: '0.5rem 1rem', borderRadius: 'var(--radius-full)', fontSize: '0.85rem', fontWeight: '600', border: '1px solid var(--border-color)', color: getStatusColor(record.status_compra) }}>
+                      {record.status_compra}
+                    </div>
+
+                    <button 
+                      onClick={() => markAsArrived(record.id)}
+                      style={{
+                        background: 'rgba(16, 185, 129, 0.2)', color: 'var(--status-green)',
+                        border: '1px solid var(--status-green)', padding: '0.5rem',
+                        borderRadius: 'var(--radius-full)', cursor: 'pointer',
+                        display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600'
+                      }}
+                      title="Confirmar que o produto chegou na loja"
+                    >
+                      <PackageCheck size={18} /> Chegou na Loja
+                    </button>
+
+                    <button 
+                      onClick={() => {
+                        if (window.confirm('Tem certeza que deseja excluir este registro de falta?')) {
+                          deleteRecord(record.id);
+                        }
+                      }}
+                      style={{
+                        background: 'transparent', color: 'var(--status-red)',
+                        border: 'none', padding: '0.5rem',
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                      title="Excluir este registro"
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </div>
+
                 </div>
-              ) : (
-                filialRecords.map(record => (
-                  <div key={record.id} className="glass-panel" style={{ padding: '1.5rem', borderLeft: '4px solid var(--status-yellow)' }}>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <div>
-                        <div style={{ fontWeight: 'bold', fontSize: '1.15rem', color: '#fff', marginBottom: '0.2rem' }}>
-                          {record.produto_nome}
-                          <span style={{ fontSize: '0.75rem', background: 'rgba(245,158,11,0.2)', color: 'var(--status-yellow)', border: '1px solid var(--status-yellow)', padding: '0.2rem 0.5rem', borderRadius: '12px', marginLeft: '0.5rem' }}>
-                            Solicitado por Ki Madeiras
-                          </span>
-                        </div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                          Solicitante: <strong>{record.vendedor_nome}</strong> • Quantidade solicitada: <strong>{record.quantidade_ideal || 1} un</strong>
-                        </div>
-                      </div>
-
-                      <div style={{ fontSize: '0.85rem', background: 'rgba(0,0,0,0.3)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)' }}>
-                        Status Atual: <strong style={{ color: 'var(--accent-blue)' }}>{record.status_compra}</strong>
-                      </div>
-                    </div>
-
-                    {/* Action buttons for Matriz seller to triage Filial request */}
-                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)' }}>
-                      <button
-                        onClick={() => updateRecordStatus(record.id, 'Em Separação na Matriz')}
-                        style={{
-                          background: record.status_compra === 'Em Separação na Matriz' ? 'var(--accent-blue)' : 'rgba(59,130,246,0.15)',
-                          color: record.status_compra === 'Em Separação na Matriz' ? '#fff' : 'var(--accent-blue)',
-                          border: '1px solid var(--accent-blue)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)',
-                          fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flex: '1 1 auto'
-                        }}
-                      >
-                        ✓ Já temos na Matriz (Em Separação)
-                      </button>
-
-                      <button
-                        onClick={() => updateRecordStatus(record.id, 'Aguardando Produto Chegar')}
-                        style={{
-                          background: record.status_compra === 'Aguardando Produto Chegar' ? 'var(--status-yellow)' : 'rgba(245,158,11,0.15)',
-                          color: record.status_compra === 'Aguardando Produto Chegar' ? '#000' : 'var(--status-yellow)',
-                          border: '1px solid var(--status-yellow)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)',
-                          fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flex: '1 1 auto'
-                        }}
-                      >
-                        ⏳ Aguardando Produto Chegar
-                      </button>
-
-                      <button
-                        onClick={() => sendFilialRequestToBuyer(record.id)}
-                        style={{
-                          background: 'rgba(239,68,68,0.15)', color: 'var(--status-red)',
-                          border: '1px solid var(--status-red)', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)',
-                          fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', flex: '1 1 auto'
-                        }}
-                      >
-                        ➔ Enviar para Lista de Faltas (Comprador)
-                      </button>
-
-                      {record.status_compra === 'Aguardando Produto Chegar' && (
-                        <button
-                          onClick={() => markAsArrived(record.id)}
-                          style={{ background: 'var(--status-green)', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: 'var(--radius-sm)', fontWeight: 'bold', cursor: 'pointer' }}
-                        >
-                          Confirmar Chegada na Matriz
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
 
       </div>

@@ -20,7 +20,6 @@ export default function TeamManagementPage() {
   const [nome, setNome] = useState('');
   const [password, setPassword] = useState('123');
   const [setor, setSetor] = useState('Geral');
-  const [loja, setLoja] = useState('Só Madeiras');
   const [role, setRole] = useState(isGeneralAdmin ? 'cotador' : 'vendedor');
 
   // Form states for Representative Agenda
@@ -52,7 +51,6 @@ export default function TeamManagementPage() {
       nome: nome.trim(),
       password: password.trim() || '123',
       setor: setor.trim(),
-      loja,
       role: roleToRegister
     });
 
@@ -420,17 +418,7 @@ export default function TeamManagementPage() {
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>Loja / Unidade</label>
-                  <select
-                    value={loja}
-                    onChange={e => setLoja(e.target.value)}
-                    style={{ width: '100%', padding: '0.7rem', borderRadius: 'var(--radius-sm)', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', color: '#fff' }}
-                  >
-                    <option value="Só Madeiras">Só Madeiras (Matriz)</option>
-                    <option value="Ki Madeiras">Ki Madeiras (Filial)</option>
-                  </select>
-                </div>
+
 
                 <div>
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.3rem' }}>Setor / Departamento</label>
@@ -483,7 +471,7 @@ export default function TeamManagementPage() {
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', textAlign: 'left' }}>
                       <th style={{ padding: '0.75rem' }}>Usuário / Nome</th>
-                      <th style={{ padding: '0.75rem' }}>Loja / Setor</th>
+                      <th style={{ padding: '0.75rem' }}>Setor / Departamento</th>
                       <th style={{ padding: '0.75rem' }}>Cargo / Autorização</th>
                       <th style={{ padding: '0.75rem', textAlign: 'center' }}>Permissão de Aprovação</th>
                       <th style={{ padding: '0.75rem', textAlign: 'right' }}>Ações</th>
@@ -503,8 +491,7 @@ export default function TeamManagementPage() {
                           </td>
 
                           <td style={{ padding: '0.85rem 0.75rem' }}>
-                            <div style={{ color: '#fff' }}>{u.loja || 'Só Madeiras'}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{u.setor || 'Geral'}</div>
+                            <div style={{ color: '#fff', fontWeight: 'bold' }}>{u.setor || 'Geral'}</div>
                           </td>
 
                           <td style={{ padding: '0.85rem 0.75rem' }}>

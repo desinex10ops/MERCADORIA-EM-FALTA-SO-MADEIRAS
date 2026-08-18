@@ -95,7 +95,7 @@ export default function History() {
                     <div style={{ fontWeight: '600', fontSize: '1.1rem', marginBottom: '0.25rem' }}>{record.produto_nome}</div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Clock size={14} /> 
-                      Chegou em {format(parseISO(record.data_atualizacao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      Chegou em {record.data_atualizacao ? (() => { try { const parsed = parseISO(record.data_atualizacao); return isNaN(parsed.getTime()) ? 'recente' : format(parsed, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }); } catch { return 'recente'; } })() : 'recente'}
                     </div>
                   </div>
 
@@ -113,10 +113,10 @@ export default function History() {
                             <span>Fornecedor:</span> <strong>{purchase.fornecedor}</strong>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem' }}>
-                            <span>Qtd x Valor:</span> <span>{purchase.quantidade} un x R$ {purchase.valor_unitario.toFixed(2)}</span>
+                            <span>Qtd x Valor:</span> <span>{purchase.quantidade} un x R$ {(Number(purchase.valor_unitario) || 0).toFixed(2)}</span>
                           </div>
                           <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)', display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', fontWeight: 'bold' }}>
-                            <span>Total Pago:</span> <span>R$ {purchase.valor_total.toFixed(2)}</span>
+                            <span>Total Pago:</span> <span>R$ {(Number(purchase.valor_total) || 0).toFixed(2)}</span>
                           </div>
                         </div>
                       );

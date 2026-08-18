@@ -22,42 +22,9 @@ const normalizeQuote = (q) => ({
 
 const enrichRecordWithStore = (r) => {
   if (!r) return r;
-  let assignedLoja = r.loja;
-
-  if (!assignedLoja) {
-    const vName = (r.vendedor_nome || '').toUpperCase();
-    const vId = (r.vendedor_id || '').toLowerCase();
-    
-    if (vName.includes('KI MADEIRAS') || vName.includes('FILIAL') || vId.includes('ki') || vId === 'u_vendedor_ki' || vId === 'u_admin_ki' || vId === 'u_raul') {
-      assignedLoja = 'Ki Madeiras';
-    } else {
-      try {
-        const savedUsers = localStorage.getItem('@MercadoriaAuth:users_list');
-        if (savedUsers) {
-          const usersList = JSON.parse(savedUsers);
-          if (Array.isArray(usersList)) {
-            const norm = (s) => (s || '').toLowerCase().trim();
-            const sellerUser = usersList.find(u => 
-              (u.uid && norm(u.uid) === vId) || 
-              (u.username && norm(u.username) === vId) ||
-              (u.nome && norm(u.nome) === norm(r.vendedor_nome))
-            );
-            if (sellerUser && sellerUser.loja) {
-              assignedLoja = sellerUser.loja;
-            }
-          }
-        }
-      } catch (e) {}
-    }
-  }
-
-  if (!assignedLoja) {
-    assignedLoja = 'Só Madeiras';
-  }
-
   return {
     ...r,
-    loja: assignedLoja
+    loja: r.loja || 'Só Madeiras'
   };
 };
 
@@ -83,7 +50,16 @@ export const DataProvider = ({ children }) => {
     return [];
   });
   const [purchases, setPurchases] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => {
+    const storedProducts = localStorage.getItem('@MercadoriaData:products');
+    if (storedProducts) {
+      try {
+        const parsed = JSON.parse(storedProducts);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+    }
+    return [];
+  });
   const [deletedSupplierIds, setDeletedSupplierIds] = useState(() => {
     const saved = localStorage.getItem('@MercadoriaData:deleted_supplier_ids');
     if (saved) {
@@ -108,18 +84,6 @@ export const DataProvider = ({ children }) => {
   });
   const [supplierQuotes, setSupplierQuotes] = useState([]);
   const [economyHistory, setEconomyHistory] = useState([]);
-  const [filialPurchases, setFilialPurchases] = useState(() => {
-    const saved = localStorage.getItem('@MercadoriaData:filial_purchases');
-    if (saved) {
-      try { 
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed.filter(item => item.id !== 'fp_1');
-        }
-      } catch (e) {}
-    }
-    return [];
-  });
   const [readNotificationIds, setReadNotificationIds] = useState(() => {
     const saved = localStorage.getItem('@MercadoriaData:read_notifications');
     if (saved) {
@@ -177,7 +141,20 @@ export const DataProvider = ({ children }) => {
             return merged;
           });
         }
-        if (localProducts) setProducts(localProducts);
+        if (localProducts && localProducts.length > 0) {
+          setProducts(prev => {
+            const map = new Map();
+            localProducts.forEach(p => map.set(p.nome.toLowerCase().trim(), p));
+            prev.forEach(p => {
+              if (!map.has(p.nome.toLowerCase().trim())) {
+                map.set(p.nome.toLowerCase().trim(), p);
+              }
+            });
+            const merged = Array.from(map.values());
+            localStorage.setItem('@MercadoriaData:products', JSON.stringify(merged));
+            return merged;
+          });
+        }
         if (localSuppliers) {
           const delSaved = localStorage.getItem('@MercadoriaData:deleted_supplier_ids');
           const delList = delSaved ? (JSON.parse(delSaved) || []) : [];
@@ -223,12 +200,12 @@ export const DataProvider = ({ children }) => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setProducts(prev => {
-            if (prev.find(p => p.id === payload.new.id)) return prev;
+          saveProducts(prev => {
+            if (prev.find(p => p.id === payload.new.id || p.nome.toLowerCase() === payload.new.nome.toLowerCase())) return prev;
             return [payload.new, ...prev];
           });
         } else if (payload.eventType === 'UPDATE') {
-          setProducts(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
+          saveProducts(prev => prev.map(r => r.id === payload.new.id ? payload.new : r));
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, (payload) => {
@@ -276,9 +253,23 @@ export const DataProvider = ({ children }) => {
     localStorage.setItem('@MercadoriaData:economy_history', JSON.stringify(newEconomy));
   };
 
+  const saveProducts = (updateFn) => {
+    setProducts(prev => {
+      const next = typeof updateFn === 'function' ? updateFn(prev) : updateFn;
+      try {
+        localStorage.setItem('@MercadoriaData:products', JSON.stringify(next));
+      } catch (e) {
+        console.warn('Error saving products to localStorage:', e);
+      }
+      return next;
+    });
+  };
+
   const updateProduct = async (id, nome, setor) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, nome: nome.trim(), setor: setor.trim() } : p));
-    await supabase.from('products').update({ nome: nome.trim(), setor: setor.trim() }).eq('id', id);
+    saveProducts(prev => prev.map(p => p.id === id ? { ...p, nome: nome.trim(), setor: setor.trim() } : p));
+    try {
+      await supabase.from('products').update({ nome: nome.trim(), setor: setor.trim() }).eq('id', id);
+    } catch (e) {}
   };
 
   const addProduct = async (nome, setor) => {
@@ -291,16 +282,17 @@ export const DataProvider = ({ children }) => {
       nome: nome.trim(),
       setor: setor.trim() || 'Geral'
     };
+    saveProducts(prev => [newProduct, ...prev.filter(p => p.id !== newProduct.id)]);
+    
     try {
-      const { data } = await supabase.from('products').insert([{ nome: newProduct.nome, setor: newProduct.setor }]).select();
-      if (data && data.length > 0) {
-        setProducts(prev => [data[0], ...prev.filter(p => p.id !== newProduct.id)]);
+      const { data, error } = await supabase.from('products').insert([{ nome: newProduct.nome, setor: newProduct.setor }]).select();
+      if (!error && data && data.length > 0) {
+        saveProducts(prev => [data[0], ...prev.filter(p => p.id !== newProduct.id && p.id !== data[0].id)]);
         return data[0];
       }
     } catch (e) {
       console.warn('Saved product locally:', e);
     }
-    setProducts(prev => [newProduct, ...prev]);
     return newProduct;
   };
 
@@ -501,24 +493,7 @@ export const DataProvider = ({ children }) => {
     } catch (e) {}
   };
 
-  const sendFilialRequestToBuyer = async (id) => {
-    saveRecords(prev => prev.map(r => r.id === id ? {
-      ...r,
-      solicitado_por_filial: true,
-      mensagem_filial: 'Solicitado por Ki Madeiras',
-      status_compra: 'Pendente',
-      data_atualizacao: new Date().toISOString()
-    } : r));
-    try {
-      const { error } = await supabase.from('records').update({
-        solicitado_por_filial: true,
-        mensagem_filial: 'Solicitado por Ki Madeiras',
-        status_compra: 'Pendente',
-        data_atualizacao: new Date().toISOString()
-      }).eq('id', id);
-      if (error) console.warn('Supabase sendFilialRequest warning:', error);
-    } catch (e) {}
-  };
+
 
   const addPurchase = (recordId, fornecedor, valorUnitario, quantidade) => {
     const record = records.find(r => r.id === recordId);
@@ -717,111 +692,41 @@ export const DataProvider = ({ children }) => {
   };
 
   const addProductsBulk = async (lines, defaultSetor) => {
-    let toInsert = [];
+    let toInsertLocal = [];
+    let toInsertDb = [];
     
     for (let line of lines) {
       const nameStd = line.trim().toLowerCase();
       if (!nameStd) continue;
       
-      if (!products.find(p => p.nome.toLowerCase() === nameStd) && !toInsert.find(p => p.nome.toLowerCase() === nameStd)) {
-        toInsert.push({
+      if (!products.find(p => p.nome.toLowerCase() === nameStd) && !toInsertLocal.find(p => p.nome.toLowerCase() === nameStd)) {
+        const prodItem = {
+          id: uuidv4(),
+          nome: line.trim(),
+          setor: defaultSetor || 'Geral'
+        };
+        toInsertLocal.push(prodItem);
+        toInsertDb.push({
           nome: line.trim(),
           setor: defaultSetor || 'Geral'
         });
       }
     }
     
-    if (toInsert.length > 0) {
-      await supabase.from('products').insert(toInsert);
+    if (toInsertLocal.length > 0) {
+      saveProducts(prev => [...toInsertLocal, ...prev]);
+      try {
+        await supabase.from('products').insert(toInsertDb);
+      } catch (e) {
+        console.warn('Saved bulk products locally:', e);
+      }
     }
-    return toInsert.length;
+    return toInsertLocal.length;
   };
 
   const clearSupplierQuotes = () => {
     setSupplierQuotes([]);
     localStorage.removeItem('@MercadoriaData:supplier_quotes');
-  };
-
-  const addFilialPurchase = ({ produto_nome, fornecedor, quantidade, valor_unitario, comprador_nome }) => {
-    const fmtProd = correctSpellingAndUppercase(produto_nome);
-    const fmtForn = correctSpellingAndUppercase(fornecedor || 'FORNECEDOR DIRETO');
-    const fmtComp = correctSpellingAndUppercase(comprador_nome || 'ADMIN KI MADEIRAS');
-    const qty = Number(quantidade) || 1;
-    const valUnit = Number(valor_unitario) || 0;
-    const valTotal = Math.round(qty * valUnit * 100) / 100;
-
-    const newFilialPurchase = {
-      id: uuidv4(),
-      produto_nome: fmtProd,
-      fornecedor: fmtForn,
-      quantidade: qty,
-      valor_unitario: valUnit,
-      valor_total: valTotal,
-      comprador_nome: fmtComp,
-      loja: 'Ki Madeiras',
-      data_compra: new Date().toISOString(),
-      tipo: 'Compra Direta Filial'
-    };
-
-    const updatedFilialPurchases = [newFilialPurchase, ...filialPurchases];
-    setFilialPurchases(updatedFilialPurchases);
-    localStorage.setItem('@MercadoriaData:filial_purchases', JSON.stringify(updatedFilialPurchases));
-
-    // Send arrival notification to Notifications Center for Admin & Store
-    const notifRecord = {
-      id: uuidv4(),
-      produto_nome: fmtProd,
-      vendedor_nome: fmtComp,
-      setor: 'Filial Ki Madeiras',
-      loja: 'Ki Madeiras',
-      quantidade_atual: qty,
-      quantidade_ideal: qty,
-      chegou: true,
-      status_compra: 'Comprado Direto por Admin Ki Madeiras',
-      data_criacao: new Date().toISOString(),
-      data_atualizacao: new Date().toISOString()
-    };
-
-    const updatedRecords = [notifRecord, ...records];
-    saveRecords(updatedRecords);
-
-    return newFilialPurchase;
-  };
-
-  const deleteFilialPurchase = (id) => {
-    const updated = filialPurchases.filter(fp => fp.id !== id);
-    setFilialPurchases(updated);
-    localStorage.setItem('@MercadoriaData:filial_purchases', JSON.stringify(updated));
-  };
-
-  const markNotificationAsRead = (id) => {
-    setReadNotificationIds(prev => {
-      if (prev.includes(id)) return prev;
-      const updated = [...prev, id];
-      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const markAllNotificationsAsRead = (notificationIds = []) => {
-    setReadNotificationIds(prev => {
-      const updated = Array.from(new Set([...prev, ...notificationIds]));
-      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
-      return updated;
-    });
-  };
-
-  const toggleNotificationRead = (id) => {
-    setReadNotificationIds(prev => {
-      let updated;
-      if (prev.includes(id)) {
-        updated = prev.filter(i => i !== id);
-      } else {
-        updated = [...prev, id];
-      }
-      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
-      return updated;
-    });
   };
 
   return (
@@ -832,14 +737,12 @@ export const DataProvider = ({ children }) => {
       suppliers,
       supplierQuotes,
       economyHistory,
-      filialPurchases,
       loading,
       addRecord, 
       updateRecordStatus, 
       markAsArrived,
       calculateUrgency,
       addPurchase,
-      addFilialPurchase,
       revertPurchaseToRecord,
       addSupplier,
       addOrUpdateSupplierContact,
@@ -848,14 +751,12 @@ export const DataProvider = ({ children }) => {
       addMultipleSupplierQuotes,
       clearSupplierQuotes,
       approveCheapestQuotes,
-      sendFilialRequestToBuyer,
       getProductPriceStats,
       getProductPriceHistory,
       updateProduct,
       addProduct,
       addProductsBulk,
       deleteRecord,
-      deleteFilialPurchase,
       readNotificationIds,
       markNotificationAsRead,
       markAllNotificationsAsRead,

@@ -12,8 +12,7 @@ const defaultInitialUsers = [
     password: '123',
     role: 'comprador',
     nome: 'Juliano (Comprador Admin)',
-    setor: 'Compras',
-    loja: 'Só Madeiras'
+    setor: 'Compras'
   },
   {
     uid: 'u_cotador',
@@ -21,44 +20,15 @@ const defaultInitialUsers = [
     password: '123',
     role: 'cotador',
     nome: 'Carlos (Auxiliar de Cotações)',
-    setor: 'Cotação & Vendas',
-    loja: 'Só Madeiras'
-  },
-  {
-    uid: 'u_admin_ki',
-    username: 'admin_ki',
-    password: '123',
-    role: 'admin_filial',
-    nome: 'Admin Ki Madeiras',
-    setor: 'Gerência Filial',
-    loja: 'Ki Madeiras'
-  },
-  {
-    uid: 'u_raul',
-    username: 'raul',
-    password: '123',
-    role: 'admin_filial',
-    nome: 'Raul (Admin Ki Madeiras)',
-    setor: 'Gerência Filial',
-    loja: 'Ki Madeiras'
-  },
-  {
-    uid: 'u_vendedor_ki',
-    username: 'vendedor_ki',
-    password: '123',
-    role: 'vendedor',
-    nome: 'Vendedor Ki Madeiras',
-    setor: 'Geral',
-    loja: 'Ki Madeiras'
+    setor: 'Cotação & Vendas'
   },
   {
     uid: 'u_vendedor_matriz',
     username: 'vendedor_matriz',
     password: '123',
     role: 'vendedor',
-    nome: 'Mateus (Vendedor Matriz)',
-    setor: 'Balcão',
-    loja: 'Só Madeiras'
+    nome: 'Mateus (Vendedor)',
+    setor: 'Balcão'
   }
 ];
 
@@ -127,12 +97,20 @@ export const AuthProvider = ({ children }) => {
       } catch (e) {}
     };
     
+    const sanitizeUser = (u) => {
+      if (!u) return u;
+      const copy = { ...u };
+      if (!copy.loja || copy.loja === 'Ki Madeiras') copy.loja = 'Só Madeiras';
+      if (copy.role === 'admin_filial') copy.role = 'comprador';
+      return copy;
+    };
+
     const storedLocalUser = localStorage.getItem('@MercadoriaAuth:user');
     const storedSessionUser = sessionStorage.getItem('@MercadoriaAuth:user');
     if (storedLocalUser) {
-      try { setUser(JSON.parse(storedLocalUser)); } catch (e) {}
+      try { setUser(sanitizeUser(JSON.parse(storedLocalUser))); } catch (e) {}
     } else if (storedSessionUser) {
-      try { setUser(JSON.parse(storedSessionUser)); } catch (e) {}
+      try { setUser(sanitizeUser(JSON.parse(storedSessionUser))); } catch (e) {}
     }
     
     fetchUsers().finally(() => setLoading(false));
@@ -166,8 +144,11 @@ export const AuthProvider = ({ children }) => {
       throw new Error('Usuário ou senha inválidos.');
     }
 
-    if (!foundUser.loja) {
+    if (!foundUser.loja || foundUser.loja === 'Ki Madeiras') {
       foundUser.loja = 'Só Madeiras';
+    }
+    if (foundUser.role === 'admin_filial') {
+      foundUser.role = 'comprador';
     }
 
     setUser(foundUser);

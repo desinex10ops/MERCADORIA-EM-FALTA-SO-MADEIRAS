@@ -11,19 +11,8 @@ export default function NotificationsPage() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Filter arrived merchandise notifications for user's store or all for admin
-  const isVendedorFilial = user?.role === 'vendedor' && user?.loja === 'Ki Madeiras';
-  const isVendedorMatriz = user?.role === 'vendedor' && (user?.loja === 'Só Madeiras' || !user?.loja);
-
   const arrivedNotifications = records.filter(r => {
     if (!r.chegou) return false;
-
-    // Filter by store context
-    if (isVendedorFilial) {
-      if (r.loja !== 'Ki Madeiras' && !r.vendedor_nome?.includes('Ki Madeiras')) return false;
-    } else if (isVendedorMatriz) {
-      if (r.loja === 'Ki Madeiras' && !r.vendedor_nome?.includes('Ki Madeiras')) return false;
-    }
 
     if (!searchTerm) return true;
     const term = searchTerm.toLowerCase();
@@ -97,7 +86,7 @@ export default function NotificationsPage() {
           ) : (
             <div style={{ display: 'grid', gap: '1.25rem' }}>
               {arrivedNotifications.map(record => {
-                const dateStr = record.data_atualizacao ? format(parseISO(record.data_atualizacao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : 'Recentemente';
+                const dateStr = record.data_atualizacao ? (() => { try { const parsed = parseISO(record.data_atualizacao); return isNaN(parsed.getTime()) ? 'Recentemente' : format(parsed, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }); } catch { return 'Recentemente'; } })() : 'Recentemente';
                 const isRead = (readNotificationIds || []).includes(record.id);
 
                 return (
@@ -145,7 +134,6 @@ export default function NotificationsPage() {
                       </div>
 
                       <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
-                        <span>🏢 Loja: <strong style={{ color: '#fff' }}>{record.loja || 'Só Madeiras'}</strong></span>
                         <span>👤 Solicitante: <strong style={{ color: 'var(--accent-blue)' }}>{record.vendedor_nome}</strong></span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                           <Clock size={14} /> Chegou em {dateStr}

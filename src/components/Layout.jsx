@@ -10,15 +10,8 @@ export default function Layout({ children }) {
   const location = useLocation();
 
   const isVendedor = user?.role === 'vendedor';
-  const isVendedorFilial = user?.role === 'vendedor' && user?.loja === 'Ki Madeiras';
-  const isVendedorMatriz = user?.role === 'vendedor' && (user?.loja === 'Só Madeiras' || !user?.loja);
 
-  const arrivedRecords = (records || []).filter(r => {
-    if (!r.chegou) return false;
-    if (isVendedorFilial) return r.loja === 'Ki Madeiras' || r.vendedor_nome?.includes('Ki Madeiras');
-    if (isVendedorMatriz) return r.loja !== 'Ki Madeiras' && !r.vendedor_nome?.includes('Ki Madeiras');
-    return true;
-  });
+  const arrivedRecords = (records || []).filter(r => r.chegou);
 
   const unreadCount = arrivedRecords.filter(r => !(readNotificationIds || []).includes(r.id)).length;
   
@@ -86,11 +79,7 @@ export default function Layout({ children }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const mainDashboardPath = user?.role === 'admin_filial' || (user?.role === 'vendedor' && user?.loja === 'Ki Madeiras') 
-    ? "/filial-ki-madeiras" 
-    : user?.role === 'vendedor' 
-      ? "/vendedor" 
-      : "/comprador";
+  const mainDashboardPath = user?.role === 'vendedor' ? "/vendedor" : "/comprador";
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', overflowX: 'hidden' }}>
@@ -123,7 +112,7 @@ export default function Layout({ children }) {
           <div style={{ textAlign: 'right', display: 'block' }}>
             <div style={{ fontWeight: '700', color: 'var(--accent-blue)', fontSize: '0.9rem' }}>{user?.nome}</div>
             <div className="hide-on-mobile" style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>
-              {user?.role === 'vendedor' ? `${user?.setor} • ${user?.loja || 'Só Madeiras'}` : `${user?.role === 'cotador' ? 'Auxiliar de Cotações' : 'Administração'} • ${user?.loja || 'Só Madeiras'}`}
+              {user?.role === 'vendedor' ? user?.setor : (user?.role === 'cotador' ? 'Auxiliar de Cotações' : 'Administração')}
             </div>
           </div>
 
@@ -165,7 +154,7 @@ export default function Layout({ children }) {
             <div>
               <div style={{ fontWeight: 800, color: '#fff', fontSize: '0.95rem' }}>{user?.nome}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                {user?.loja || 'Só Madeiras'} • {user?.role === 'vendedor' ? 'Vendedor' : user?.role === 'cotador' ? 'Cotador' : 'Admin'}
+                {user?.role === 'vendedor' ? `Vendedor • ${user?.setor || 'Geral'}` : user?.role === 'cotador' ? 'Cotador' : 'Administração'}
               </div>
             </div>
           </div>

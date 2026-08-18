@@ -8,7 +8,6 @@ import SellerPanel from './pages/SellerPanel';
 import BuyerDashboard from './pages/BuyerDashboard';
 import History from './pages/History';
 import ProductsCatalog from './pages/ProductsCatalog';
-import FilialPanel from './pages/FilialPanel';
 import SupplierQuotePage from './pages/SupplierQuotePage';
 import TeamManagementPage from './pages/TeamManagementPage';
 import EconomyPage from './pages/EconomyPage';
@@ -17,12 +16,17 @@ import NotificationsPage from './pages/NotificationsPage';
 function PrivateRoute({ children, allowedRoles, roleRequired }) {
   const { user } = useAuth();
   
-  if (!user) return <Navigate to="/login" />;
-  if (roleRequired && user.role !== roleRequired) {
-    return <Navigate to="/" />;
+  if (!user) return <Navigate to="/login" replace />;
+
+  const effectiveRole = user.role === 'admin_filial' ? 'comprador' : user.role;
+
+  if (roleRequired && effectiveRole !== roleRequired) {
+    const target = effectiveRole === 'vendedor' ? '/vendedor' : '/comprador';
+    return <Navigate to={target} replace />;
   }
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" />;
+  if (allowedRoles && !allowedRoles.includes(effectiveRole)) {
+    const target = effectiveRole === 'vendedor' ? '/vendedor' : '/comprador';
+    return <Navigate to={target} replace />;
   }
   return children;
 }
@@ -40,25 +44,15 @@ function App() {
         {/* Public Supplier Quotation Route */}
         <Route path="/cotacao-fornecedor" element={<SupplierQuotePage />} />
         
-        {/* Root Redirect based on role and store */}
+        {/* Root Redirect based on role */}
         <Route path="/" element={
           !user ? <Navigate to="/login" /> :
-          user.role === 'admin_filial' ? <Navigate to="/filial-ki-madeiras" /> :
-          user.role === 'vendedor' ? (
-            user.loja === 'Ki Madeiras' ? <Navigate to="/filial-ki-madeiras" /> : <Navigate to="/vendedor" />
-          ) : 
-          <Navigate to="/comprador" />
+          user.role === 'vendedor' ? <Navigate to="/vendedor" /> : <Navigate to="/comprador" />
         } />
 
         <Route path="/vendedor" element={
           <PrivateRoute allowedRoles={['vendedor']}>
             <SellerPanel />
-          </PrivateRoute>
-        } />
-
-        <Route path="/filial-ki-madeiras" element={
-          <PrivateRoute allowedRoles={['vendedor', 'admin_filial']}>
-            <FilialPanel />
           </PrivateRoute>
         } />
 
