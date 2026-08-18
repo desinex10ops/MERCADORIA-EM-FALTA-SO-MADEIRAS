@@ -114,6 +114,8 @@ export const AuthProvider = ({ children }) => {
     }
     
     fetchUsers().finally(() => setLoading(false));
+    const timer = setTimeout(() => setLoading(false), 1500);
+    return () => clearTimeout(timer);
   }, []);
 
   const login = async (username, password, keepConnected = true) => {

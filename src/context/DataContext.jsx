@@ -183,6 +183,7 @@ export const DataProvider = ({ children }) => {
     };
 
     fetchData();
+    const timer = setTimeout(() => setLoading(false), 1500);
 
     // Supabase Real-time Subscriptions!
     const channel = supabase.channel('schema-db-changes')
