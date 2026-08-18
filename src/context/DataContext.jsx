@@ -36,29 +36,132 @@ const defaultSuppliersList = [
   { id: 'sup_5', nome: 'GIGA ATACADO DA CONSTRUÇÃO', representante: 'Fernando Costa', telefone: '(79) 98111-9988', email: 'fernando@giga.com.br', ultimaCotacao: new Date().toISOString(), totalCotacoes: 6 }
 ];
 
+const defaultProductsList = [
+  { id: 'p1', nome: 'CIMENTO VOTORANTIM 50KG', setor: 'Básico' },
+  { id: 'p2', nome: 'TUBO PVC 100MM TIGRE', setor: 'Hidráulica' },
+  { id: 'p3', nome: 'FIO FLEXÍVEL 2.5MM SIL', setor: 'Elétrica' },
+  { id: 'p4', nome: 'TINTA ACRÍLICA CORAL 18L', setor: 'Pintura' },
+  { id: 'p5', nome: 'ARGAMASSA ACIII QUARTZOLIT', setor: 'Básico' },
+  { id: 'p6', nome: 'COMPENSADO NAVAL 18MM 2.20X1.60M', setor: 'Marcenaria' },
+  { id: 'p7', nome: 'MDF BRANCO TX 15MM 2.75X1.85M', setor: 'Marcenaria' },
+  { id: 'p8', nome: 'DISCO DE CORTE 4.1/2 POL NORTON', setor: 'Ferramentas' },
+  { id: 'p9', nome: 'PREGO COM CABEÇA 18X27 1KG', setor: 'Ferragens' },
+  { id: 'p10', nome: 'FECHADURA STAM ROSETTA INOX', setor: 'Ferragens' }
+];
+
+const defaultRecordsList = [
+  {
+    id: 'rec_1',
+    produto_nome: 'COMPENSADO NAVAL 18MM 2.20X1.60M',
+    vendedor_nome: 'Mateus (Vendedor)',
+    setor: 'Marcenaria',
+    quantidade_atual: 2,
+    quantidade_ideal: 20,
+    urgencia: 'Alta',
+    status_compra: 'Pendente',
+    chegou: false,
+    cliente_esperando: true,
+    data_criacao: new Date().toISOString(),
+    data_atualizacao: new Date().toISOString()
+  },
+  {
+    id: 'rec_2',
+    produto_nome: 'MDF BRANCO TX 15MM 2.75X1.85M',
+    vendedor_nome: 'Mateus (Vendedor)',
+    setor: 'Marcenaria',
+    quantidade_atual: 5,
+    quantidade_ideal: 30,
+    urgencia: 'Média',
+    status_compra: 'Pendente',
+    chegou: false,
+    cliente_esperando: false,
+    data_criacao: new Date().toISOString(),
+    data_atualizacao: new Date().toISOString()
+  },
+  {
+    id: 'rec_3',
+    produto_nome: 'CIMENTO VOTORANTIM 50KG',
+    vendedor_nome: 'Carlos (Cotador)',
+    setor: 'Básico',
+    quantidade_atual: 0,
+    quantidade_ideal: 50,
+    urgencia: 'Alta',
+    status_compra: 'Cotando',
+    chegou: false,
+    cliente_esperando: true,
+    data_criacao: new Date().toISOString(),
+    data_atualizacao: new Date().toISOString()
+  }
+];
+
+const defaultPurchasesList = [
+  {
+    id: 'pur_1',
+    record_id: 'rec_demo_1',
+    produto_nome: 'COMPENSADO NAVAL 18MM 2.20X1.60M',
+    fornecedor: 'MADEIREIRA RIO REAL',
+    valor_unitario: 145.00,
+    quantidade: 15,
+    valor_total: 2175.00,
+    data_compra: new Date(Date.now() - 86400000 * 2).toISOString()
+  },
+  {
+    id: 'pur_2',
+    record_id: 'rec_demo_2',
+    produto_nome: 'MDF BRANCO TX 15MM 2.75X1.85M',
+    fornecedor: 'ATACADÃO MADEIRAS',
+    valor_unitario: 180.00,
+    quantidade: 25,
+    valor_total: 4500.00,
+    data_compra: new Date(Date.now() - 86400000 * 4).toISOString()
+  },
+  {
+    id: 'pur_3',
+    record_id: 'rec_demo_3',
+    produto_nome: 'CIMENTO VOTORANTIM 50KG',
+    fornecedor: 'GIGA ATACADO DA CONSTRUÇÃO',
+    valor_unitario: 34.50,
+    quantidade: 50,
+    valor_total: 1725.00,
+    data_compra: new Date(Date.now() - 86400000 * 6).toISOString()
+  }
+];
+
 export const DataProvider = ({ children }) => {
   const [records, setRecords] = useState(() => {
     const storedRecords = localStorage.getItem('@MercadoriaData:records');
     if (storedRecords) {
       try {
         const parsed = JSON.parse(storedRecords);
-        if (Array.isArray(parsed)) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed.map(enrichRecordWithStore);
         }
       } catch {}
     }
-    return [];
+    localStorage.setItem('@MercadoriaData:records', JSON.stringify(defaultRecordsList));
+    return defaultRecordsList;
   });
-  const [purchases, setPurchases] = useState([]);
+  const [purchases, setPurchases] = useState(() => {
+    const storedPurchases = localStorage.getItem('@MercadoriaData:purchases');
+    if (storedPurchases) {
+      try {
+        const parsed = JSON.parse(storedPurchases);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {}
+    }
+    localStorage.setItem('@MercadoriaData:purchases', JSON.stringify(defaultPurchasesList));
+    return defaultPurchasesList;
+  });
   const [products, setProducts] = useState(() => {
     const storedProducts = localStorage.getItem('@MercadoriaData:products');
     if (storedProducts) {
       try {
         const parsed = JSON.parse(storedProducts);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       } catch {}
     }
-    return [];
+    localStorage.setItem('@MercadoriaData:products', JSON.stringify(defaultProductsList));
+    return defaultProductsList;
   });
   const [deletedSupplierIds, setDeletedSupplierIds] = useState(() => {
     const saved = localStorage.getItem('@MercadoriaData:deleted_supplier_ids');
