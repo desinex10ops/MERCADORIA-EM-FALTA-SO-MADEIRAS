@@ -287,7 +287,7 @@ export const AuthProvider = ({ children }) => {
       changePassword, 
       deleteUser 
     }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
