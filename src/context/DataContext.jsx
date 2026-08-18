@@ -36,96 +36,32 @@ const defaultSuppliersList = [
   { id: 'sup_5', nome: 'GIGA ATACADO DA CONSTRUÇÃO', representante: 'Fernando Costa', telefone: '(79) 98111-9988', email: 'fernando@giga.com.br', ultimaCotacao: new Date().toISOString(), totalCotacoes: 6 }
 ];
 
-const defaultProductsList = [
-  { id: 'p1', nome: 'CIMENTO VOTORANTIM 50KG', setor: 'Básico' },
-  { id: 'p2', nome: 'TUBO PVC 100MM TIGRE', setor: 'Hidráulica' },
-  { id: 'p3', nome: 'FIO FLEXÍVEL 2.5MM SIL', setor: 'Elétrica' },
-  { id: 'p4', nome: 'TINTA ACRÍLICA CORAL 18L', setor: 'Pintura' },
-  { id: 'p5', nome: 'ARGAMASSA ACIII QUARTZOLIT', setor: 'Básico' },
-  { id: 'p6', nome: 'COMPENSADO NAVAL 18MM 2.20X1.60M', setor: 'Marcenaria' },
-  { id: 'p7', nome: 'MDF BRANCO TX 15MM 2.75X1.85M', setor: 'Marcenaria' },
-  { id: 'p8', nome: 'DISCO DE CORTE 4.1/2 POL NORTON', setor: 'Ferramentas' },
-  { id: 'p9', nome: 'PREGO COM CABEÇA 18X27 1KG', setor: 'Ferragens' },
-  { id: 'p10', nome: 'FECHADURA STAM ROSETTA INOX', setor: 'Ferragens' }
-];
-
-const defaultRecordsList = [
-  {
-    id: 'rec_1',
-    produto_nome: 'COMPENSADO NAVAL 18MM 2.20X1.60M',
-    vendedor_nome: 'Mateus (Vendedor)',
-    setor: 'Marcenaria',
-    quantidade_atual: 2,
-    quantidade_ideal: 20,
-    urgencia: 'Alta',
-    status_compra: 'Pendente',
-    chegou: false,
-    cliente_esperando: true,
-    data_criacao: new Date().toISOString(),
-    data_atualizacao: new Date().toISOString()
-  },
-  {
-    id: 'rec_2',
-    produto_nome: 'MDF BRANCO TX 15MM 2.75X1.85M',
-    vendedor_nome: 'Mateus (Vendedor)',
-    setor: 'Marcenaria',
-    quantidade_atual: 5,
-    quantidade_ideal: 30,
-    urgencia: 'Média',
-    status_compra: 'Pendente',
-    chegou: false,
-    cliente_esperando: false,
-    data_criacao: new Date().toISOString(),
-    data_atualizacao: new Date().toISOString()
-  },
-  {
-    id: 'rec_3',
-    produto_nome: 'CIMENTO VOTORANTIM 50KG',
-    vendedor_nome: 'Carlos (Cotador)',
-    setor: 'Básico',
-    quantidade_atual: 0,
-    quantidade_ideal: 50,
-    urgencia: 'Alta',
-    status_compra: 'Cotando',
-    chegou: false,
-    cliente_esperando: true,
-    data_criacao: new Date().toISOString(),
-    data_atualizacao: new Date().toISOString()
+const safeLocalStorageSet = (key, value) => {
+  try {
+    const stringified = typeof value === 'string' ? value : JSON.stringify(value);
+    localStorage.setItem(key, stringified);
+  } catch (err) {
+    console.warn(`LocalStorage write warning for ${key}:`, err);
+    try {
+      if (Array.isArray(value)) {
+        const cleaned = value.map(item => {
+          if (item && typeof item === 'object' && item.foto) {
+            const { foto, ...rest } = item;
+            return rest;
+          }
+          return item;
+        }).slice(0, 100);
+        localStorage.setItem(key, JSON.stringify(cleaned));
+      }
+    } catch (e) {
+      console.error('LocalStorage write failed:', e);
+    }
   }
-];
+};
 
-const defaultPurchasesList = [
-  {
-    id: 'pur_1',
-    record_id: 'rec_demo_1',
-    produto_nome: 'COMPENSADO NAVAL 18MM 2.20X1.60M',
-    fornecedor: 'MADEIREIRA RIO REAL',
-    valor_unitario: 145.00,
-    quantidade: 15,
-    valor_total: 2175.00,
-    data_compra: new Date(Date.now() - 86400000 * 2).toISOString()
-  },
-  {
-    id: 'pur_2',
-    record_id: 'rec_demo_2',
-    produto_nome: 'MDF BRANCO TX 15MM 2.75X1.85M',
-    fornecedor: 'ATACADÃO MADEIRAS',
-    valor_unitario: 180.00,
-    quantidade: 25,
-    valor_total: 4500.00,
-    data_compra: new Date(Date.now() - 86400000 * 4).toISOString()
-  },
-  {
-    id: 'pur_3',
-    record_id: 'rec_demo_3',
-    produto_nome: 'CIMENTO VOTORANTIM 50KG',
-    fornecedor: 'GIGA ATACADO DA CONSTRUÇÃO',
-    valor_unitario: 34.50,
-    quantidade: 50,
-    valor_total: 1725.00,
-    data_compra: new Date(Date.now() - 86400000 * 6).toISOString()
-  }
-];
+const defaultProductsList = [];
+const defaultRecordsList = [];
+const defaultPurchasesList = [];
 
 export const DataProvider = ({ children }) => {
   const [records, setRecords] = useState(() => {
@@ -133,35 +69,32 @@ export const DataProvider = ({ children }) => {
     if (storedRecords) {
       try {
         const parsed = JSON.parse(storedRecords);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           return parsed.map(enrichRecordWithStore);
         }
       } catch {}
     }
-    localStorage.setItem('@MercadoriaData:records', JSON.stringify(defaultRecordsList));
-    return defaultRecordsList;
+    return [];
   });
   const [purchases, setPurchases] = useState(() => {
     const storedPurchases = localStorage.getItem('@MercadoriaData:purchases');
     if (storedPurchases) {
       try {
         const parsed = JSON.parse(storedPurchases);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch {}
     }
-    localStorage.setItem('@MercadoriaData:purchases', JSON.stringify(defaultPurchasesList));
-    return defaultPurchasesList;
+    return [];
   });
   const [products, setProducts] = useState(() => {
     const storedProducts = localStorage.getItem('@MercadoriaData:products');
     if (storedProducts) {
       try {
         const parsed = JSON.parse(storedProducts);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       } catch {}
     }
-    localStorage.setItem('@MercadoriaData:products', JSON.stringify(defaultProductsList));
-    return defaultProductsList;
+    return [];
   });
   const [deletedSupplierIds, setDeletedSupplierIds] = useState(() => {
     const saved = localStorage.getItem('@MercadoriaData:deleted_supplier_ids');
@@ -240,7 +173,7 @@ export const DataProvider = ({ children }) => {
                 merged.push(enrichedLocal);
               }
             });
-            localStorage.setItem('@MercadoriaData:records', JSON.stringify(merged));
+            safeLocalStorageSet('@MercadoriaData:records', merged);
             return merged;
           });
         }
@@ -254,7 +187,7 @@ export const DataProvider = ({ children }) => {
               }
             });
             const merged = Array.from(map.values());
-            localStorage.setItem('@MercadoriaData:products', JSON.stringify(merged));
+            safeLocalStorageSet('@MercadoriaData:products', merged);
             return merged;
           });
         }
@@ -263,7 +196,7 @@ export const DataProvider = ({ children }) => {
           const delList = delSaved ? (JSON.parse(delSaved) || []) : [];
           const filteredSuppliers = localSuppliers.filter(s => !delList.includes(s.id) && !delList.includes((s.nome || '').toLowerCase().trim()));
           setSuppliers(filteredSuppliers);
-          localStorage.setItem('@MercadoriaData:suppliers', JSON.stringify(filteredSuppliers));
+          safeLocalStorageSet('@MercadoriaData:suppliers', filteredSuppliers);
         }
         if (localQuotes && localQuotes.length > 0) {
           setSupplierQuotes(prev => {
@@ -274,7 +207,7 @@ export const DataProvider = ({ children }) => {
                 combined.push(dbQ);
               }
             });
-            localStorage.setItem('@MercadoriaData:supplier_quotes', JSON.stringify(combined));
+            safeLocalStorageSet('@MercadoriaData:supplier_quotes', combined);
             return combined;
           });
         }
@@ -330,41 +263,33 @@ export const DataProvider = ({ children }) => {
   const saveRecords = (updateFn) => {
     setRecords(prev => {
       const nextRecords = typeof updateFn === 'function' ? updateFn(prev) : updateFn;
-      try {
-        localStorage.setItem('@MercadoriaData:records', JSON.stringify(nextRecords));
-      } catch (e) {
-        console.warn('Error saving records to localStorage:', e);
-      }
+      safeLocalStorageSet('@MercadoriaData:records', nextRecords);
       return nextRecords;
     });
   };
 
   const savePurchases = (newPurchases) => {
     setPurchases(newPurchases);
-    localStorage.setItem('@MercadoriaData:purchases', JSON.stringify(newPurchases));
+    safeLocalStorageSet('@MercadoriaData:purchases', newPurchases);
   };
 
   const saveSupplierQuotes = (updateFn) => {
     setSupplierQuotes(prev => {
       const next = typeof updateFn === 'function' ? updateFn(prev) : updateFn;
-      localStorage.setItem('@MercadoriaData:supplier_quotes', JSON.stringify(next));
+      safeLocalStorageSet('@MercadoriaData:supplier_quotes', next);
       return next;
     });
   };
 
   const saveEconomyHistory = (newEconomy) => {
     setEconomyHistory(newEconomy);
-    localStorage.setItem('@MercadoriaData:economy_history', JSON.stringify(newEconomy));
+    safeLocalStorageSet('@MercadoriaData:economy_history', newEconomy);
   };
 
   const saveProducts = (updateFn) => {
     setProducts(prev => {
       const next = typeof updateFn === 'function' ? updateFn(prev) : updateFn;
-      try {
-        localStorage.setItem('@MercadoriaData:products', JSON.stringify(next));
-      } catch (e) {
-        console.warn('Error saving products to localStorage:', e);
-      }
+      safeLocalStorageSet('@MercadoriaData:products', next);
       return next;
     });
   };
@@ -837,7 +762,7 @@ export const DataProvider = ({ children }) => {
     setReadNotificationIds(prev => {
       if (prev.includes(id)) return prev;
       const updated = [...prev, id];
-      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
+      safeLocalStorageSet('@MercadoriaData:read_notifications', updated);
       return updated;
     });
   };
@@ -846,7 +771,7 @@ export const DataProvider = ({ children }) => {
     setReadNotificationIds(prev => {
       const set = new Set([...prev, ...ids]);
       const updated = Array.from(set);
-      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
+      safeLocalStorageSet('@MercadoriaData:read_notifications', updated);
       return updated;
     });
   };
@@ -854,7 +779,7 @@ export const DataProvider = ({ children }) => {
   const toggleNotificationRead = (id) => {
     setReadNotificationIds(prev => {
       const updated = prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id];
-      localStorage.setItem('@MercadoriaData:read_notifications', JSON.stringify(updated));
+      safeLocalStorageSet('@MercadoriaData:read_notifications', updated);
       return updated;
     });
   };
