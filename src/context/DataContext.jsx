@@ -525,12 +525,20 @@ export const DataProvider = ({ children }) => {
       data_atualizacao: new Date().toISOString()
     } : r));
     try {
+      const numId = Number(id);
+      const targetId = !isNaN(numId) && String(numId) === String(id).trim() ? numId : id;
       const { error } = await supabase.from('records').update({
         chegou: true,
         status_compra: 'Comprou',
         data_atualizacao: new Date().toISOString()
-      }).eq('id', id);
-      if (error) console.warn('Supabase mark arrived warning:', error);
+      }).eq('id', targetId);
+      if (error) {
+        await supabase.from('records').update({
+          chegou: true,
+          status_compra: 'Comprou',
+          data_atualizacao: new Date().toISOString()
+        }).eq('id', String(id));
+      }
     } catch (e) {}
   };
 

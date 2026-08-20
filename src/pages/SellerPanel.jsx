@@ -99,6 +99,13 @@ export default function SellerPanel() {
 
   // Matriz & Filial records
   const myRecords = records.filter(r => !r.chegou && smartSearch(r.produto_nome, searchTerm));
+  const comprouCount = myRecords.filter(r => r.status_compra === 'Comprou').length;
+
+  const handleClearComprou = () => {
+    if (window.confirm(`Deseja dar baixa e confirmar a chegada na loja de todos os ${comprouCount} produto(s) marcados como "Comprou"?`)) {
+      myRecords.filter(r => r.status_compra === 'Comprou').forEach(r => markAsArrived(r.id));
+    }
+  };
 
   return (
     <Layout>
