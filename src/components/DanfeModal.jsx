@@ -145,7 +145,7 @@ function QRScanner({ onResult, onError }) {
 
 // ─── MAIN MODAL ─────────────────────────────────────────────────────────────
 export default function DanfeModal({ isOpen, onClose }) {
-  const { records, addPurchase } = useData();
+  const { records, addPurchase, markAsArrived, addRecord } = useData();
   const { user } = useAuth();
 
   const [inputMode, setInputMode] = useState('camera'); // 'camera' | 'xml' | 'chave'
@@ -294,16 +294,51 @@ export default function DanfeModal({ isOpen, onClose }) {
     setParsedInvoice(invoice);
     const missingRecords = records.filter(r => !r.chegou);
     const initialMatches = {};
+
     (invoice.items || []).forEach((item, idx) => {
       const normItem = normStr(item.produto_nome);
-      const match = missingRecords.find(r => {
+      let bestMatch = null;
+      let bestScore = 0;
+
+      missingRecords.forEach(r => {
         const normRec = normStr(r.produto_nome);
-        const words = normItem.split(' ').filter(w => w.length > 3);
-        return normRec.includes(normItem) || normItem.includes(normRec) ||
-          words.some(w => normRec.includes(w));
+
+        // Exact match
+        if (normItem === normRec) {
+          bestMatch = r;
+          bestScore = 100;
+          return;
+        }
+
+        // Substring match
+        if (normItem.includes(normRec) || normRec.includes(normItem)) {
+          const score = 80;
+          if (score > bestScore) {
+            bestScore = score;
+            bestMatch = r;
+          }
+        }
+
+        // Word overlap match
+        const itemWords = normItem.split(/\s+/).filter(w => w.length > 2);
+        const recWords = normRec.split(/\s+/).filter(w => w.length > 2);
+
+        const matchingWords = itemWords.filter(w => recWords.includes(w));
+        if (matchingWords.length >= 2 || (matchingWords.length === 1 && itemWords.length <= 2 && recWords.length <= 2)) {
+          const overlapScore = (matchingWords.length / Math.max(itemWords.length, recWords.length)) * 70;
+          if (overlapScore > 40 && overlapScore > bestScore) {
+            bestScore = overlapScore;
+            bestMatch = r;
+          }
+        }
       });
-      initialMatches[idx] = { selected: !!match, matchedRecord: match || null };
+
+      initialMatches[idx] = {
+        selected: true, // By default, select all DANFE items so they get processed
+        matchedRecord: bestMatch || null
+      };
     });
+
     setSelectedMatches(initialMatches);
   };
 
@@ -314,19 +349,79 @@ export default function DanfeModal({ isOpen, onClose }) {
     }));
   };
 
-  // ── Execute Baixa ────────────────────────────────────────────────────────
-  const handleExecuteBaixa = () => {
-    if (!parsedInvoice) return;
-    let baixas = 0;
-    (parsedInvoice.items || []).forEach((item, idx) => {
-      const m = selectedMatches[idx];
-      if (m?.selected && m?.matchedRecord) {
-        addPurchase(m.matchedRecord.id, parsedInvoice.fornecedor, item.valor_unitario, item.quantidade);
-        baixas++;
+  const handleSelectMatch = (idx, recordId) => {
+    const missingRecords = records.filter(r => !r.chegou);
+    const matchedRecord = missingRecords.find(r => r.id === recordId) || null;
+    setSelectedMatches(prev => ({
+      ...prev,
+      [idx]: {
+        ...prev[idx],
+        selected: true,
+        matchedRecord: matchedRecord
       }
-    });
-    setSuccessMsg(`🎉 Baixa automática concluída! ${baixas} falta(s) marcada(s) como compradas da NF Nº ${parsedInvoice.numeroNota}.`);
-    setTimeout(() => { setSuccessMsg(''); setParsedInvoice(null); onClose(); }, 3000);
+    }));
+  };
+
+  // ── Execute Baixa ────────────────────────────────────────────────────────
+  const handleExecuteBaixa = async () => {
+    if (!parsedInvoice) return;
+    setIsLoading(true);
+    setErrorMsg('');
+    let baixasCount = 0;
+
+    try {
+      for (const [idx, item] of (parsedInvoice.items || []).entries()) {
+        const m = selectedMatches[idx];
+        if (!m?.selected) continue;
+
+        let targetRecordId = m.matchedRecord?.id;
+
+        if (!targetRecordId) {
+          // If not matched to an existing missing record, create a new record already marked as arrived
+          const newRec = await addRecord({
+            produto_nome: item.produto_nome,
+            vendedor_nome: user?.nome || 'Sistema (DANFE)',
+            vendedor_id: user?.uid || 'u_danfe',
+            setor: 'Geral',
+            loja: 'Só Madeiras',
+            quantidade_atual: item.quantidade,
+            quantidade_ideal: item.quantidade,
+            chegou: true,
+            status_compra: 'Comprou',
+            cliente_esperando: false,
+          });
+          targetRecordId = newRec?.id;
+        }
+
+        if (targetRecordId) {
+          // Add purchase entry
+          addPurchase(
+            targetRecordId,
+            parsedInvoice.fornecedor,
+            item.valor_unitario,
+            item.quantidade,
+            item.produto_nome
+          );
+
+          // Crucial step: Mark record as arrived so it leaves missing list and goes to history!
+          markAsArrived(targetRecordId);
+
+          baixasCount++;
+        }
+      }
+
+      setSuccessMsg(`🎉 Baixa automática concluída! ${baixasCount} produto(s) baixado(s) e registrado(s) no Histórico (NF Nº ${parsedInvoice.numeroNota}).`);
+      setTimeout(() => {
+        setSuccessMsg('');
+        setParsedInvoice(null);
+        onClose();
+      }, 3000);
+    } catch (err) {
+      console.error('Erro ao dar baixa no DANFE:', err);
+      setErrorMsg('Ocorreu um erro ao processar a baixa da nota fiscal.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ── Tab button style ─────────────────────────────────────────────────────
@@ -526,15 +621,30 @@ export default function DanfeModal({ isOpen, onClose }) {
                             <td style={{ padding: '0.6rem', textAlign: 'right' }}>R$ {(it.valor_unitario || 0).toFixed(2)}</td>
                             <td style={{ padding: '0.6rem', textAlign: 'right', fontWeight: 'bold', color: 'var(--status-green)' }}>R$ {(it.valor_total || 0).toFixed(2)}</td>
                             <td style={{ padding: '0.6rem', textAlign: 'center' }}>
-                              {m.matchedRecord ? (
-                                <span style={{ fontSize: '0.72rem', background: 'rgba(16,185,129,0.2)', color: 'var(--status-green)', border: '1px solid var(--status-green)', padding: '0.15rem 0.5rem', borderRadius: '10px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                                  <CheckCircle2 size={11} /> {m.matchedRecord.produto_nome}
-                                </span>
-                              ) : (
-                                <span style={{ fontSize: '0.72rem', background: 'rgba(100,100,100,0.2)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', padding: '0.15rem 0.5rem', borderRadius: '10px' }}>
-                                  Não estava na lista
-                                </span>
-                              )}
+                              <select
+                                value={m.matchedRecord?.id || ''}
+                                onChange={(e) => handleSelectMatch(idx, e.target.value)}
+                                style={{
+                                  background: m.matchedRecord ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
+                                  color: m.matchedRecord ? 'var(--status-green)' : 'var(--text-secondary)',
+                                  border: `1px solid ${m.matchedRecord ? 'var(--status-green)' : 'var(--border-color)'}`,
+                                  borderRadius: 'var(--radius-sm, 6px)',
+                                  padding: '0.35rem 0.5rem',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'bold',
+                                  maxWidth: '240px',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                <option value="" style={{ background: '#1e293b', color: '#fff' }}>
+                                  ➕ Salvar no Histórico (Sem falta prévia)
+                                </option>
+                                {records.filter(r => !r.chegou).map(r => (
+                                  <option key={r.id} value={r.id} style={{ background: '#1e293b', color: '#fff' }}>
+                                    📌 Falta: {r.produto_nome} ({r.vendedor_nome})
+                                  </option>
+                                ))}
+                              </select>
                             </td>
                           </tr>
                         );
@@ -550,6 +660,7 @@ export default function DanfeModal({ isOpen, onClose }) {
               <button
                 type="button"
                 onClick={() => { setParsedInvoice(null); setChaveInput(''); setInputMode('camera'); }}
+                disabled={isLoading}
                 style={{ background: 'rgba(255,255,255,0.07)', color: 'var(--text-secondary)', border: '1px solid var(--border-color)', padding: '0.7rem 1.1rem', borderRadius: 'var(--radius-sm)', fontWeight: 'bold', cursor: 'pointer' }}
               >
                 ↩️ Carregar Outra Nota
@@ -559,9 +670,14 @@ export default function DanfeModal({ isOpen, onClose }) {
                 <button
                   type="button"
                   onClick={handleExecuteBaixa}
-                  style={{ background: 'var(--status-green)', color: '#fff', border: 'none', padding: '0.85rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', boxShadow: '0 4px 15px rgba(16,185,129,0.3)' }}
+                  disabled={isLoading}
+                  style={{ background: 'var(--status-green)', color: '#fff', border: 'none', padding: '0.85rem 1.5rem', borderRadius: 'var(--radius-sm)', fontWeight: 800, cursor: isLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', boxShadow: '0 4px 15px rgba(16,185,129,0.3)', opacity: isLoading ? 0.7 : 1 }}
                 >
-                  <ShieldCheck size={18} /> ⚡ Confirmar Baixa Automática
+                  {isLoading ? (
+                    <><RefreshCw size={18} style={{ animation: 'spin 1s linear infinite' }} /> Processando baixa...</>
+                  ) : (
+                    <><ShieldCheck size={18} /> ⚡ Confirmar Baixa Automática</>
+                  )}
                 </button>
               )}
             </div>

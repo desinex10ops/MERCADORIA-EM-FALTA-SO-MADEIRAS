@@ -496,6 +496,7 @@ export const DataProvider = ({ children }) => {
     } catch (e) {
       console.warn('Saved record locally (Supabase exception):', e);
     }
+    return newRecord;
   };
 
   const updateRecordStatus = async (id, newStatus) => {
@@ -524,9 +525,9 @@ export const DataProvider = ({ children }) => {
 
 
 
-  const addPurchase = (recordId, fornecedor, valorUnitario, quantidade) => {
+  const addPurchase = (recordId, fornecedor, valorUnitario, quantidade, prodNomeOverride) => {
     const record = records.find(r => r.id === recordId);
-    const prodNome = record ? record.produto_nome : 'Produto';
+    const prodNome = prodNomeOverride || (record ? record.produto_nome : 'Produto');
 
     const newPurchase = {
       id: uuidv4(),
