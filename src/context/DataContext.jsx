@@ -500,33 +500,51 @@ export const DataProvider = ({ children }) => {
   };
 
   const updateRecordStatus = async (id, newStatus) => {
-    saveRecords(prev => prev.map(r => r.id === id ? { ...r, status_compra: newStatus, data_atualizacao: new Date().toISOString() } : r));
+    if (!id) return;
+    const isArrived = newStatus === 'Chegou' || newStatus === 'Comprou';
+    saveRecords(prev => prev.map(r => (r.id === id || String(r.id) === String(id)) ? {
+      ...r,
+      status_compra: newStatus,
+      chegou: isArrived ? true : r.chegou,
+      data_atualizacao: new Date().toISOString()
+    } : r));
     try {
-      const { error } = await supabase.from('records').update({ status_compra: newStatus, data_atualizacao: new Date().toISOString() }).eq('id', id);
+      const updateData = { status_compra: newStatus, data_atualizacao: new Date().toISOString() };
+      if (isArrived) updateData.chegou = true;
+      const { error } = await supabase.from('records').update(updateData).eq('id', id);
       if (error) console.warn('Supabase update status warning:', error);
     } catch (e) {}
   };
 
   const markAsArrived = async (id) => {
-    saveRecords(prev => prev.map(r => r.id === id ? { ...r, chegou: true, data_atualizacao: new Date().toISOString() } : r));
+    if (!id) return;
+    saveRecords(prev => prev.map(r => (r.id === id || String(r.id) === String(id)) ? {
+      ...r,
+      chegou: true,
+      status_compra: 'Comprou',
+      data_atualizacao: new Date().toISOString()
+    } : r));
     try {
-      const { error } = await supabase.from('records').update({ chegou: true, data_atualizacao: new Date().toISOString() }).eq('id', id);
+      const { error } = await supabase.from('records').update({
+        chegou: true,
+        status_compra: 'Comprou',
+        data_atualizacao: new Date().toISOString()
+      }).eq('id', id);
       if (error) console.warn('Supabase mark arrived warning:', error);
     } catch (e) {}
   };
 
   const deleteRecord = async (id) => {
-    saveRecords(prev => prev.filter(r => r.id !== id));
+    if (!id) return;
+    saveRecords(prev => prev.filter(r => r.id !== id && String(r.id) !== String(id)));
     try {
       const { error } = await supabase.from('records').delete().eq('id', id);
       if (error) console.warn('Supabase delete record warning:', error);
     } catch (e) {}
   };
 
-
-
   const addPurchase = (recordId, fornecedor, valorUnitario, quantidade, prodNomeOverride) => {
-    const record = records.find(r => r.id === recordId);
+    const record = records.find(r => r.id === recordId || String(r.id) === String(recordId));
     const prodNome = prodNomeOverride || (record ? record.produto_nome : 'Produto');
 
     const newPurchase = {
@@ -542,7 +560,7 @@ export const DataProvider = ({ children }) => {
 
     savePurchases([newPurchase, ...purchases]);
     if (recordId) {
-      updateRecordStatus(recordId, 'Comprou');
+      markAsArrived(recordId);
     }
     // Auto-save supplier
     addSupplier(fornecedor);

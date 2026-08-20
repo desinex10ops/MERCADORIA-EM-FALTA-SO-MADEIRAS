@@ -370,14 +370,29 @@ export default function DanfeModal({ isOpen, onClose }) {
     let baixasCount = 0;
 
     try {
+      const processedRecordIds = new Set();
+
       for (const [idx, item] of (parsedInvoice.items || []).entries()) {
         const m = selectedMatches[idx];
         if (!m?.selected) continue;
 
-        let targetRecordId = m.matchedRecord?.id;
+        let targetRecord = m.matchedRecord;
+
+        // If no explicit match selected, try finding an un-arrived missing record by name overlap
+        if (!targetRecord) {
+          const normItem = normStr(item.produto_nome);
+          targetRecord = records.find(r => {
+            if (r.chegou || processedRecordIds.has(r.id)) return false;
+            const normRec = normStr(r.produto_nome);
+            return normRec.includes(normItem) || normItem.includes(normRec) ||
+              normItem.split(/\s+/).some(w => w.length > 3 && normRec.includes(w));
+          });
+        }
+
+        let targetRecordId = targetRecord?.id;
 
         if (!targetRecordId) {
-          // If not matched to an existing missing record, create a new record already marked as arrived
+          // If still no missing record matched, create a new record directly as arrived
           const newRec = await addRecord({
             produto_nome: item.produto_nome,
             vendedor_nome: user?.nome || 'Sistema (DANFE)',
@@ -394,7 +409,12 @@ export default function DanfeModal({ isOpen, onClose }) {
         }
 
         if (targetRecordId) {
-          // Add purchase entry
+          processedRecordIds.add(targetRecordId);
+
+          // 1. Mark as arrived (chegou: true)
+          await markAsArrived(targetRecordId);
+
+          // 2. Register purchase entry linked to targetRecordId
           addPurchase(
             targetRecordId,
             parsedInvoice.fornecedor,
@@ -403,14 +423,11 @@ export default function DanfeModal({ isOpen, onClose }) {
             item.produto_nome
           );
 
-          // Crucial step: Mark record as arrived so it leaves missing list and goes to history!
-          markAsArrived(targetRecordId);
-
           baixasCount++;
         }
       }
 
-      setSuccessMsg(`🎉 Baixa automática concluída! ${baixasCount} produto(s) baixado(s) e registrado(s) no Histórico (NF Nº ${parsedInvoice.numeroNota}).`);
+      setSuccessMsg(`🎉 Baixa automática concluída! ${baixasCount} produto(s) baixado(s) da lista de falta e registrado(s) no Histórico (NF Nº ${parsedInvoice.numeroNota}).`);
       setTimeout(() => {
         setSuccessMsg('');
         setParsedInvoice(null);
